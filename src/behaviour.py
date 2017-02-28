@@ -1,10 +1,4 @@
-import sys #FIXME remove later
-sys.path.append("/home/norcar/catkin_ws/src/mission_control/src/test") #FIXME remove later
-
 import rospy
-import smach_test6 #FIXME remove later
-import smach_test3 #FIXME remove later
-import smach_test1 #FIXME remove later
 import smach
 import smach_ros
 import time
@@ -61,7 +55,6 @@ class Behaviour:
 
 
     def set_token(self):
-        #self.request_pub.publish(-1)
         self._token = True
 
     def set_priority(self, prio):
@@ -73,18 +66,8 @@ class Behaviour:
 
         self._priority = prio
 
-        text = "Prio %d init" % prio
-        rospy.loginfo(text)
-
     def set_executable(self, file):
         """ Sets statemachine that will be executed """
-
-        if self._priority == 6:
-            self._sm = smach_test6.get_sm()
-        if self._priority == 3:
-            self._sm = smach_test3.get_sm()
-        if self._priority == 1:
-            self._sm = smach_test1.get_sm()
 
         func_type = type(self._sm._update_once)
         self._sm._old_update_once = self._sm._update_once
@@ -133,7 +116,6 @@ class Behaviour:
         if self.is_active():
             self.pause_behaviour()
 
-        print "Prio %d release token" % self._priority
         self._token = False
         self.release_pub.publish(rel_prio)
 
@@ -147,8 +129,6 @@ class Behaviour:
         if data.data == -1:
             self._token = False
         elif self._token and (data.data < self._priority or not self.is_active()):
-            text = "Prio %d request token" % data.data
-            rospy.loginfo(text)
             self.release_token(data.data)
 
     def release_token_cb(self, data):
@@ -163,8 +143,6 @@ class Behaviour:
         if data.data != self._priority:
             return
         
-        text = "Sain tokeni prio %d" % self._priority
-        rospy.loginfo(text)
         self._token = True
         
         if self._paused:
@@ -279,7 +257,6 @@ class Behaviour:
     def deactivate(self):
         """ Deactivates node """
 
-        rospy.loginfo("Lopetasin")
         self._running = False
 
     def is_thread_alive(self):
@@ -298,19 +275,11 @@ class Behaviour:
         If the thread ends, deactivates node
         """
 
-        if self._token:
-            text = "I have token with priority %d" % self._priority
-            rospy.loginfo(text)
-
         active = self.is_active()
 
         if active and not self._token:
             self.request_token()
 
-        if active and self._token:
-            text = "I am active with priority %d" % self._priority
-            #rospy.loginfo(text)
-        
         if active and self._token and not self._running:
             self.activate()
         elif self._token and self._running and not self.is_thread_alive():

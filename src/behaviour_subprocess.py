@@ -10,7 +10,7 @@ import subprocess
 import signal
 import os
 
-class Behavioour_Subprocess(behaviour.Behaviour):
+class Behaviour_Subprocess(behaviour.Behaviour):
 
     _process = False
     """subprocess.Popen: subprocess where script will be executed """
@@ -77,7 +77,6 @@ class Behavioour_Subprocess(behaviour.Behaviour):
         """ Pauses the current subprocess """
 
         os.kill(self._process.pid, signal.SIGSTOP)
-        rospy.loginfo("Pause prio %d" % self._priority)
         self._paused = True
 
 
@@ -85,7 +84,6 @@ class Behavioour_Subprocess(behaviour.Behaviour):
         """ Resumes the current subprocess """
 
         os.kill(self._process.pid, signal.SIGCONT)
-        rospy.loginfo("Resume prio %d" % self._priority)
         self._paused = False
 
     def activate(self):
