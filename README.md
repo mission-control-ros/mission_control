@@ -1,12 +1,26 @@
 # Mission control for autonomous robots
 
-This project is for creating mission control program for autonomous robots, by using either SMACH's Statemachines or custom scripts.
+This project is for creating mission control program for autonomous robots, by using either SMACH's Statemachines or custom scripts. SMACH could be found at http://wiki.ros.org/smach.
 
 Mission control program consists of 1 to N nodes. Each node has a custom script or a statemachine, which is executed when the node becomes active and has aqcuired token. 
 
 Every node has a priority level from 1 to N. Multiple nodes may have same priority levels (NB! Same priority level nodes execute asynchronously). Lower priority number shows higher priority.
 
 Token shows which priority level is allowed to execute its statemachine or custom script. When node has token other nodes may request the token for themselves. Token is released only when requester node's priority level is higher than active node's priority level or node has finished executing.
+
+## Prerequisites
+
+Mission control system will only work with ROS (Robot Operating System). Tutorial, on how to install ROS, can be found at http://wiki.ros.org/ROS/Installation.
+
+## Installing
+
+```
+cd ~/catkin_ws/src
+git clone https://github.com/mission-control-ros/mission_control.git
+source ~/catkin_ws/devel/setup.bash
+cd ~/catkin_ws
+catkin_make
+```
 
 ## Creating custom scripts
 

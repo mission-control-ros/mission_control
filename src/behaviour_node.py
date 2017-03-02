@@ -11,6 +11,10 @@ def main():
     beha.set_active(rospy.get_param('~active'))
     beha.set_executable('')
 
+    """
+    We need to make a little pause after start-up so some of the token release/request 
+    do not go missing
+    """
     wait_rate = rospy.Rate(0.7)
     wait_rate.sleep()
 
