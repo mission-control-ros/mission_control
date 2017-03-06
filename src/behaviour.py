@@ -7,6 +7,7 @@ from std_msgs.msg import Int32
 from std_msgs.msg import String
 from mission_control.msg import Variable
 from threading import Thread
+import imp
 
 class Behaviour:
 
@@ -67,12 +68,34 @@ class Behaviour:
         self._priority = prio
 
     def set_executable(self, file):
-        """ Sets statemachine that will be executed """
+        """ Sets statemachine that will be executed 
+        
+        Args:
+            file (string): path to python file where atleast one statemachine is defined
+
+        Returns:
+            bool: True if StateMachine was successfully found, False otherwise
+        """
+
+        statemachine = imp.load_source('statemachine', file)
+        for var_name in  dir(statemachine):
+            var = eval('statemachine.' + var_name)
+
+            if isinstance(var, smach.StateMachine):
+                self._sm = var
+                break
+
+        if not self._sm:
+            rospy.logfatal("Could not find StateMachine from file %s" % file)
+            rospy.signal_shutdown("Could not find StateMachine from file %s" % file)
+            return False
 
         func_type = type(self._sm._update_once)
         self._sm._old_update_once = self._sm._update_once
         self._sm._update_once = func_type(_new_update_once, self._sm, smach.StateMachine)
         self._sm._paused = False
+
+        return True
 
     def subscribe_to_topics(self):
         """ Subscribes to all ROS topics """
