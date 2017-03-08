@@ -42,6 +42,7 @@ To make your script's variables available for other scripts use function set_var
     <param name="token" value="1" />
     <param name="active" value="int(self.get_var('counter6', 10)) &lt;= 10 and int(self.get_var('counter6', 10)) != 0" />
     <param name="script" value="$(find mission_control)/examples/scripts/custom_script_priority6.py" />
+    <param name="wait_before_startup" value="2" />
   </node>
 ```
 #### Node's parameters explanation
@@ -51,4 +52,4 @@ To make your script's variables available for other scripts use function set_var
 * token - shows which node has token on startup
 * active - string which will be evaluated to boolean value. It shows under which conditions node is allowed to be active. To access variables that initialized in scripts use function self.get_var('your_variables_name'). Function's self.get_var first parameter is the variable's name that is being requested. Second optional parameter is default value that is returned if no variable with given name is found. When no default value is supplied None is returned when requested variable is not found.
 * script - full path to script which will be executed when node becomes active
-
+* wait_before_startup - how many seconds node sleeps before execution in order to subscribe to all the topics. This parameter is optional and defaults to 1 second.

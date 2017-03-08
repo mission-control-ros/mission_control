@@ -77,9 +77,9 @@ class Behaviour:
             bool: True if StateMachine was successfully found, False otherwise
         """
 
-        statemachine = imp.load_source('statemachine', file)
-        for var_name in  dir(statemachine):
-            var = eval('statemachine.' + var_name)
+        state_machine = imp.load_source('state_machine', file)
+        for var_name in  dir(state_machine):
+            var = eval('state_machine.' + var_name)
 
             if isinstance(var, smach.StateMachine):
                 self._sm = var
