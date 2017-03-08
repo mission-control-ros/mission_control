@@ -9,7 +9,7 @@ def main():
     beha = behaviour.Behaviour()
     beha.set_priority(rospy.get_param('~priority'))
     beha.set_active(rospy.get_param('~active'))
-    beha.set_executable(rospy.get_param('~statemachine'))
+    beha.set_executable(rospy.get_param('~state_machine'))
 
     """
     We need to make a little pause after start-up so some of the token release/request 

@@ -30,19 +30,19 @@ class Behaviour:
     """bool: shows if other initialized nodes have given this node permission to work"""
 
     _paused = False
-    """bool: shows if statemachine's work is paused or not"""
+    """bool: shows if state machine's work is paused or not"""
 
     _running = False
-    """bool: shows if the statemachine is active or not"""
+    """bool: shows if the state machine is active or not"""
 
     _run_thread = False
-    """thread.Thread: thread, in which the statemachine is working"""
+    """thread.Thread: thread, in which the state machine is working"""
 
     _sm = False
-    """statemachine.Statemachine: current nodes statemachine"""
+    """statemachine.Statemachine: current nodes state machine"""
 
     _cache = {}
-    """dict: all the variables that node uses from statemachines are stored here"""
+    """dict: all the variables that node uses from state machines are stored here"""
 
     request_pub = rospy.Publisher(TOKEN_REQUEST_TOPIC, Int32, queue_size=mission_control_utils.QUEUE_SIZE)
     """rospy.Publisher: token request publisher"""
@@ -68,10 +68,10 @@ class Behaviour:
         self._priority = prio
 
     def set_executable(self, file):
-        """ Sets statemachine that will be executed 
+        """ Sets state machine that will be executed 
         
         Args:
-            file (string): path to python file where atleast one statemachine is defined
+            file (string): path to python file where atleast one state machine is defined
 
         Returns:
             bool: True if StateMachine was successfully found, False otherwise
@@ -130,7 +130,7 @@ class Behaviour:
     def release_token(self, rel_prio):
         """ Releases held token
 
-        If necessary pauses the current statemachine
+        If necessary pauses the current state machine
 
         Args:
             rel_prio (int): indicates to which priority token is released to
@@ -157,7 +157,7 @@ class Behaviour:
     def release_token_cb(self, data):
         """ Deals with incoming token release message.
 
-        If necessary claims token and resumes current statemachine.
+        If necessary claims token and resumes current state machine.
 
         Args:
             data (std_msgs.msg.Int32): priority number of the node to whom token was released
@@ -172,13 +172,13 @@ class Behaviour:
             self.resume_behaviour()
 
     def pause_behaviour(self):
-        """ Pauses the current statemachine """
+        """ Pauses the current state machine """
 
         self._sm._paused = True
         self._paused = True
 
     def resume_behaviour(self):
-        """ Resumes the current statemachine """
+        """ Resumes the current state machine """
 
         self._sm._paused = False
         self._paused = False
@@ -198,7 +198,7 @@ class Behaviour:
     def get_variable_cb(self, data):
         """ Deals with get variable msg
 
-        Searches current node's statemachine for the given variable
+        Searches current node's state machine for the given variable
         If variable is found, the sends out set variable msg
 
         Args:
@@ -210,7 +210,7 @@ class Behaviour:
             mission_control_utils.set_var(data.data, var)
 
     def get_var_from_sm(self, name):
-        """ Searches node's statemachine for given variable
+        """ Searches node's state machine for given variable
 
         Args:
             name (string): variable name which is being searched
@@ -233,8 +233,8 @@ class Behaviour:
         """ Request given variable's value
 
         First: checks cache, if variable exists there
-        Second: if variable is not in cache then searches variable from iteself's statemachine
-        Third: lastly, if variable is not in node's statemachine, requests variable from all initialized nodes
+        Second: if variable is not in cache then searches variable from iteself's state machine
+        Third: lastly, if variable is not in node's state machine, requests variable from all initialized nodes
 
         Args:
             name (string): requested variable's name
@@ -283,7 +283,7 @@ class Behaviour:
         self._running = False
 
     def is_thread_alive(self):
-        """ Checks if the thread, in which the statemachine runs, is alive 
+        """ Checks if the thread, in which the state machine runs, is alive 
 
         Returns:
             bool: True if thread is alive, False otherwise
@@ -311,7 +311,7 @@ class Behaviour:
 def _new_update_once(self):
     """ Overrides class' Statemachine function _update_once
 
-    This is necessary so the statemachine inside the node could be paused and later resumed
+    This is necessary so the state machine inside the node could be paused and later resumed
 
     """
 
