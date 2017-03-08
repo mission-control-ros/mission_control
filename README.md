@@ -25,13 +25,13 @@ catkin_make
 ## Creating custom scripts
 
 In the beginning of the custom script function ros_init from module mission_control_utils must be called. This is required to receive and send variables to other scripts. 
-When the script doesn't need any external variables and doesn't share it's own variables, then function call ros_init is not required.
+When the script doesn't need any external variables and doesn't share its own variables, then function call ros_init is not required.
 
 ### Variable management inside custom scripts
 
-To access external variables initialized in other scripts use function get_var from module mission_control_utils. Function's first parameter is the variable's name that is being requested. Second parameter is the default value that is returned, if requested variable is not found. Default value is optional and if it is not supplied function will return None if requested variable is not found.
+To access external variables initialized in other scripts use function get_var() from module mission_control_utils. Function's first parameter is the variable's name that is being requested. Second parameter is the default value that is returned, if requested variable is not found. Default value is optional and if it is not supplied function will return None if requested variable is not found.
 
-To make your script's variables available for other scripts use function set_var from module mission_control_utils. Function's first parameter is variable's name and second parameter is for variable's value.
+To make your script's variables available for other scripts use function set_var() from module mission_control_utils. Function's first parameter is variable's name and second parameter is for variable's value.
 
 ## Deployment for custom scripts
 
@@ -40,8 +40,8 @@ To make your script's variables available for other scripts use function set_var
   <node name="node1" pkg="mission_control" type="behaviour_subprocess_node.py" output="screen">
     <param name="priority" value="3" />
     <param name="token" value="1" />
-    <param name="active" value="True or self.get_var('test_var')" />
-    <param name="script" value="$(find mission_control)/src/script.py" />
+    <param name="active" value="int(self.get_var('counter6', 10)) &lt;= 10 and int(self.get_var('counter6', 10)) != 0" />
+    <param name="script" value="$(find mission_control)/examples/scripts/custom_script_priority6.py" />
   </node>
 ```
 #### Node's parameters explanation
