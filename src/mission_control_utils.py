@@ -127,7 +127,6 @@ def check_var(name):
 
     global cch, ttl, last_upt
 
-    print cch, ttl, last_upt
     if name not in ttl or name not in last_upt:
         return
 
@@ -135,12 +134,10 @@ def check_var(name):
     var_last_upt = last_upt[name]
 
     if rospy.Time.now() >= (var_last_upt + var_ttl):
-        print "Deletin %s" % name
         if name in cch: del cch[name]
         if "_"+name in cch: del cch["_" + name]
         if name in ttl: del ttl[name]
         if name in last_upt: del last_upt[name]
-        print cch, ttl, last_upt
 
 def publish_get_var(name):
     """ Sends out message to all listening nodes about variable request.
