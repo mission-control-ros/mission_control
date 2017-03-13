@@ -44,6 +44,12 @@ class Behaviour:
     _cache = {}
     """dict: all the variables that node uses from state machines are stored here"""
 
+    _var_ttl = {}
+    """dict: holds variables time to live in seconds"""
+
+    _var_last_upt = {}
+    """dict: holds he info when the variable was last set"""
+
     request_pub = rospy.Publisher(TOKEN_REQUEST_TOPIC, Int32, queue_size=mission_control_utils.QUEUE_SIZE)
     """rospy.Publisher: token request publisher"""
 
@@ -189,11 +195,15 @@ class Behaviour:
         If variable exists in cache then the value is updated otherwise it's ignored
 
         Args:
-            data (mission_control.msg.Variable): data.name is the variable's name, data.value is the variable's value
+            data (mission_control.msg.Variable): data.name is the variable's name, data.value is the variable's value, data.ttl is variable's validity
         """
 
         if data.name in self._cache or ("_" + data.name) in self._cache:
             self._cache[data.name] = data.value
+            self._var_last_upt[data.name] = rospy.Time.now()
+
+            if data.ttl > 0:
+                self._var_ttl[data.name] = rospy.Duration.from_sec(data.ttl)
 
     def get_variable_cb(self, data):
         """ Deals with get variable msg
@@ -241,10 +251,12 @@ class Behaviour:
             def_val (mixed): default value when requested variabele is not found
             counter (int): number of times function is in recursion
 
-
         Returns:
             mixed: requested variable's value
         """
+
+        if counter == 0:
+            self.check_var(name)
 
         if name in self._cache:
             return self._cache[name]
@@ -254,6 +266,7 @@ class Behaviour:
            
             if found: #Because returned value can be whatever
                 self._cache[name] = var_in_my_sm
+                self._var_last_upt[name] = rospy.Time.now()
                 return var_in_my_sm
 
             self._cache["_"+name] = True
@@ -261,6 +274,7 @@ class Behaviour:
 
         if counter > mission_control_utils.MAX_CBS:
             self._cache[name] = def_val
+            self._var_last_upt[name] = rospy.Time.now()
             return def_val
 
         counter += 1
@@ -268,6 +282,25 @@ class Behaviour:
         time.sleep(mission_control_utils.VAR_RECHECK_DELAY)
 
         return self.get_var(name, def_val, counter)
+
+    def check_var(self, name):
+        """Checks if the variable in cache is new enough or needs to be deleted
+
+        Args:
+            name (string): variable's name
+        """
+        
+        if name not in self._var_ttl or name not in self._var_last_upt:
+            return
+
+        var_ttl = self._var_ttl[name]
+        var_last_upt = self._var_last_upt[name]
+
+        if rospy.Time.now() >= (var_last_upt + var_ttl):
+            if name in self._cache: del self._cache[name]
+            if "_"+name in self._cache: del self._cache["_" + name]
+            if name in self._var_ttl: del self._var_ttl[name]
+            if name in self._var_last_upt: del self._var_last_upt[name]
 
     def activate(self):
         """ Activates node """

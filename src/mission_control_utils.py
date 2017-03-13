@@ -5,31 +5,37 @@ from std_msgs.msg import Bool
 from mission_control.msg import Variable
 
 MAX_CBS = 4
-"""int: how many times get_var functions can call itself """
+"""int: how many times get_var functions can call itself"""
 
 VAR_RECHECK_DELAY = 0.5
-"""float: how long function sleeps, before it goes into recursion """
+"""float: how long function sleeps, before it goes into recursion"""
 
 VAR_GET_TOPIC = "/mission_control/variable/get"
-"""string: topic name for getting variables """
+"""string: topic name for getting variables"""
 
 VAR_SET_TOPIC = "/mission_control/variable/set"
-"""string: topic name for setting variables """
+"""string: topic name for setting variables"""
 
 QUEUE_SIZE = 10
-"""int: determines queue size for rospy publishers """
+"""int: determines queue size for rospy publishers"""
 
 cch = {}
-"""dict: variable cache for scripts """
+"""dict: variable cache for scripts"""
+
+ttl = {}
+"""dict: time to live for scipts variables"""
+
+last_upt = {}
+"""dict: last time scripts variables were updated"""
 
 set_pub = rospy.Publisher(VAR_SET_TOPIC, Variable, queue_size=QUEUE_SIZE)
-"""rospy.Publisher: publisher which sends out messages for setting variables """
+"""rospy.Publisher: publisher which sends out messages for setting variables"""
 
 get_pub = rospy.Publisher(VAR_GET_TOPIC, String, queue_size=QUEUE_SIZE)
-"""rospy.Publisher: publisher which sends out messages for getting variables """
+"""rospy.Publisher: publisher which sends out messages for getting variables"""
 
 set_sub = False
-"""rospy.Subscriber: subscriber which receives messages for getting variables """
+"""rospy.Subscriber: subscriber which receives messages for getting variables"""
 
 def set_var_cb(data):
     """ Deals with incoming set variable msg
@@ -39,21 +45,26 @@ def set_var_cb(data):
     to make it into separate ROS node
     
     Args:
-        data (mission_control.msg.Variable): data.name is the variable's name, data.value is the variable's value
+        data (mission_control.msg.Variable): data.name is the variable's name, data.value is the variable's value, data.ttl is variable's validity
     """
 
-    global cch
+    global cch, ttl, last_upt
 
     if data.name in cch or ("_" + data.name) in cch:
         cch[data.name] = data.value
+        last_upt[data.name] = rospy.Time.now()
+
+        if data.ttl > 0:
+            ttl[data.name] = rospy.Duration.from_sec(data.ttl)
 
 
-def set_var(name, value):
+def set_var(name, value, ttl = None):
     """ Sends out message to all listening nodes about new variable value.
 
     Args:
         name (string): variable's name
         value (mixed): variable's value
+        ttl (int): variable's validity in seconds
     """
 
     global set_pub
@@ -61,6 +72,10 @@ def set_var(name, value):
     msg = Variable()
     msg.name = str(name)
     msg.value = str(value)
+    if ttl == None:
+        msg.ttl = 0
+    else:
+        msg.ttl = int(ttl)
     set_pub.publish(msg)
 
 
@@ -79,7 +94,10 @@ def get_var(name, def_val=None, counter=0):
         mixed: requested variable's value
     """
 
-    global cch, VAR_RECHECK_DELAY, MAX_CBS
+    global cch, VAR_RECHECK_DELAY, MAX_CBS, last_upt
+
+    if counter == 0:
+        check_var(name)
 
     if name in cch:
         return cch[name]
@@ -91,6 +109,7 @@ def get_var(name, def_val=None, counter=0):
 
     if counter > MAX_CBS:
         cch[name] = def_val
+        self.last_upt[name] = rospy.Time.now()
         return def_val
  
     counter += 1
@@ -99,6 +118,29 @@ def get_var(name, def_val=None, counter=0):
 
     return get_var(name, def_val, counter)
 
+def check_var(name):
+    """Checks if the variable in cache is new enough or needs to be deleted
+
+    Args:
+        name (string): variable's name 
+    """
+
+    global cch, ttl, last_upt
+
+    print cch, ttl, last_upt
+    if name not in ttl or name not in last_upt:
+        return
+
+    var_ttl = ttl[name]
+    var_last_upt = last_upt[name]
+
+    if rospy.Time.now() >= (var_last_upt + var_ttl):
+        print "Deletin %s" % name
+        if name in cch: del cch[name]
+        if "_"+name in cch: del cch["_" + name]
+        if name in ttl: del ttl[name]
+        if name in last_upt: del last_upt[name]
+        print cch, ttl, last_upt
 
 def publish_get_var(name):
     """ Sends out message to all listening nodes about variable request.
