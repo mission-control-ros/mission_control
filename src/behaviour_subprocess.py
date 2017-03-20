@@ -1,6 +1,7 @@
 import rospy
 import time
 import mission_control_utils
+from mission_control_utils_constants import Constants
 from std_msgs.msg import Int32
 from std_msgs.msg import String
 from std_msgs.msg import Bool
@@ -47,13 +48,13 @@ class Behaviour_Subprocess(behaviour.Behaviour):
             self._cache["_"+name] = True
             mission_control_utils.publish_get_var(name)
 
-        if counter > mission_control_utils.MAX_CBS:
+        if counter > Constants.MAX_CBS:
             self._cache[name] = def_val
             return def_val
 
         counter += 1
 
-        time.sleep(mission_control_utils.VAR_RECHECK_DELAY)
+        time.sleep(Constants.VAR_RECHECK_DELAY)
 
         return self.get_var(name, def_val, counter)
 

@@ -21,6 +21,7 @@ class Foo(smach.State):
         rospy.loginfo('Executing state FOO for state machine priority 3')
         if self.counter3 != 0:
             self.counter3 -= 1
+            rospy.loginfo("Countdown 6 in script priority 3: %d" % int(mission_control_utils.get_var("counter6", -1)))
             rospy.loginfo("Countdown for priority 3: %d", self.counter3)
             mission_control_utils.set_var('counter3', self.counter3)
             time.sleep(1)

@@ -3,6 +3,7 @@ import smach
 import smach_ros
 import time
 import mission_control_utils
+from mission_control_utils_constants import Constants
 from std_msgs.msg import Int32
 from std_msgs.msg import String
 from mission_control.msg import Variable
@@ -74,19 +75,19 @@ class Behaviour:
     _var_last_upt = {}
     """dict: holds he info when the variable was last set"""
 
-    request_pub = rospy.Publisher(TOKEN_REQUEST_TOPIC, Int32, queue_size=mission_control_utils.QUEUE_SIZE)
+    request_pub = rospy.Publisher(TOKEN_REQUEST_TOPIC, Int32, queue_size=Constants.QUEUE_SIZE)
     """rospy.Publisher: token request publisher"""
 
-    release_pub = rospy.Publisher(TOKEN_RELEASE_TOPIC, Int32, queue_size=mission_control_utils.QUEUE_SIZE)
+    release_pub = rospy.Publisher(TOKEN_RELEASE_TOPIC, Int32, queue_size=Constants.QUEUE_SIZE)
     """rospy.Publisher: token release publisher"""
 
-    ok_pub = rospy.Publisher(WATCHDOG_OK_TOPIC, String, queue_size=mission_control_utils.QUEUE_SIZE)
+    ok_pub = rospy.Publisher(WATCHDOG_OK_TOPIC, String, queue_size=Constants.QUEUE_SIZE)
     """rospy.Publisher: watchdog ok publisher"""
 
-    ask_pub = rospy.Publisher(TOKEN_ASK_TOPIC, Int32, queue_size=mission_control_utils.QUEUE_SIZE)
+    ask_pub = rospy.Publisher(TOKEN_ASK_TOPIC, Int32, queue_size=Constants.QUEUE_SIZE)
     """rospy.Publisher: startup token ask publisher"""
 
-    answer_pub = rospy.Publisher(TOKEN_ANSWER_TOPIC, Answer, queue_size=mission_control_utils.QUEUE_SIZE)
+    answer_pub = rospy.Publisher(TOKEN_ANSWER_TOPIC, Answer, queue_size=Constants.QUEUE_SIZE)
     """rospy.Publisher: startup token answer publisher"""
 
     def __init__(self):
@@ -141,8 +142,8 @@ class Behaviour:
         rospy.Subscriber(self.TOKEN_ASK_TOPIC, Int32, self.ask_token_cb)
         rospy.Subscriber(self.TOKEN_ANSWER_TOPIC, Answer, self.answer_token_cb)
 
-        rospy.Subscriber(mission_control_utils.VAR_SET_TOPIC, Variable, self.set_variable_cb)
-        rospy.Subscriber(mission_control_utils.VAR_GET_TOPIC, String, self.get_variable_cb)
+        rospy.Subscriber(Constants.VAR_SET_TOPIC, Variable, self.set_variable_cb)
+        rospy.Subscriber(Constants.VAR_GET_TOPIC, String, self.get_variable_cb)
     
 
     def set_active(self, active_str):
@@ -371,14 +372,14 @@ class Behaviour:
             self._cache["_"+name] = True
             mission_control_utils.publish_get_var(name)
 
-        if counter > mission_control_utils.MAX_CBS:
+        if counter > Constants.MAX_CBS:
             self._cache[name] = def_val
             self._var_last_upt[name] = rospy.Time.now()
             return def_val
 
         counter += 1
 
-        time.sleep(mission_control_utils.VAR_RECHECK_DELAY)
+        time.sleep(Constants.VAR_RECHECK_DELAY)
 
         return self.get_var(name, def_val, counter)
 
