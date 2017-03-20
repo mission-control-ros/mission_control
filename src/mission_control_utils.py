@@ -87,7 +87,7 @@ def get_var(name, def_val=None, counter=0):
 
     Args:
         name (string): requested variable's name
-        def_val (mixed): default value when requested variabele is not found
+        def_val (mixed): default value when requested variable is not found
         counter (int): number of times function is in recursion
 
     Returns:
@@ -133,7 +133,7 @@ def check_var(name):
     var_ttl = ttl[name]
     var_last_upt = last_upt[name]
 
-    if rospy.Time.now() >= (var_last_upt + var_ttl):
+    if rospy.Time.now() > (var_last_upt + var_ttl):
         if name in cch: del cch[name]
         if "_"+name in cch: del cch["_" + name]
         if name in ttl: del ttl[name]

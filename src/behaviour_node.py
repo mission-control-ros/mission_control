@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 import rospy
 import behaviour
-from std_msgs.msg import String
 
 def main():
     rospy.init_node('behaviour', anonymous=True)
-    token = rospy.get_param('~token');
+    token = rospy.get_param('~token')
     beha = behaviour.Behaviour()
     beha.set_priority(rospy.get_param('~priority'))
     beha.set_active(rospy.get_param('~active'))

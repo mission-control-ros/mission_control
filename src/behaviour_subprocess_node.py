@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import rospy
 import behaviour_subprocess
-from std_msgs.msg import String
 
 def main():
     rospy.init_node('behaviour_subprocess', anonymous=True)

@@ -17,6 +17,9 @@ class Behaviour:
     TOKEN_RELEASE_TOPIC = "/mission_control/token/release"
     """string: token release topic name """
 
+    WATCHDOG_OK_TOPIC = "/mission_control/watchdog/ok"
+    """string: watchdog ok topic name """
+
     _priority = 0
     """int: node's priority. The lower the number the higher the priority
 
@@ -55,6 +58,9 @@ class Behaviour:
 
     release_pub = rospy.Publisher(TOKEN_RELEASE_TOPIC, Int32, queue_size=mission_control_utils.QUEUE_SIZE)
     """rospy.Publisher: token release publisher"""
+
+    ok_pub = rospy.Publisher(WATCHDOG_OK_TOPIC, String, queue_size=mission_control_utils.QUEUE_SIZE)
+    """rospy.Publisher: watchdog ok publisher"""
 
     def __init__(self):
 
@@ -296,7 +302,7 @@ class Behaviour:
         var_ttl = self._var_ttl[name]
         var_last_upt = self._var_last_upt[name]
 
-        if rospy.Time.now() >= (var_last_upt + var_ttl):
+        if rospy.Time.now() > (var_last_upt + var_ttl):
             if name in self._cache: del self._cache[name]
             if "_"+name in self._cache: del self._cache["_" + name]
             if name in self._var_ttl: del self._var_ttl[name]
@@ -324,12 +330,20 @@ class Behaviour:
 
         return self._run_thread.is_alive()
 
+    def node_is_ok(self):
+        """ Publishes message that shows that node is alive """
+
+        self.ok_pub.publish(rospy.get_name())
+        
+
     def spin(self):
         """ Checks if the node is active
 
         If the node is active and not running, activates node
         If the thread ends, deactivates node
         """
+
+        self.node_is_ok()
 
         active = self.is_active()
 
