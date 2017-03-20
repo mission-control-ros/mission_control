@@ -6,19 +6,40 @@ import mission_control_utils
 from std_msgs.msg import Int32
 from std_msgs.msg import String
 from mission_control.msg import Variable
+from mission_control.msg import Answer
 from threading import Thread
 import imp
 
 class Behaviour:
 
     TOKEN_REQUEST_TOPIC = "/mission_control/token/request"
-    """string: token request topic name """
+    """string: token request topic name"""
 
     TOKEN_RELEASE_TOPIC = "/mission_control/token/release"
-    """string: token release topic name """
+    """string: token release topic name"""
+
+    TOKEN_ASK_TOPIC = "/mission_control/token/ask"
+    """string: token ask topic name"""
+
+    TOKEN_ANSWER_TOPIC = "/mission_control/token/answer"
+    """string: token answer topic"""
 
     WATCHDOG_OK_TOPIC = "/mission_control/watchdog/ok"
-    """string: watchdog ok topic name """
+    """string: watchdog ok topic name"""
+
+    MAX_TOKEN_ASK_TIMES = 3
+    """int: how many times node will ask for token on startup"""
+
+    _token_ask_times = 0
+    """int: how many times node has asked for token on startup"""
+
+    _answer_false_gotten = False
+    """bool: indicates whether node has been denied for startup token for even once"""
+
+    _answer = True
+    """bool: indicates whether node has the right to acquire token on startup.
+    It is initialized to True, to solve the problem when only one node exists.
+    """
 
     _priority = 0
     """int: node's priority. The lower the number the higher the priority
@@ -62,13 +83,15 @@ class Behaviour:
     ok_pub = rospy.Publisher(WATCHDOG_OK_TOPIC, String, queue_size=mission_control_utils.QUEUE_SIZE)
     """rospy.Publisher: watchdog ok publisher"""
 
+    ask_pub = rospy.Publisher(TOKEN_ASK_TOPIC, Int32, queue_size=mission_control_utils.QUEUE_SIZE)
+    """rospy.Publisher: startup token ask publisher"""
+
+    answer_pub = rospy.Publisher(TOKEN_ANSWER_TOPIC, Answer, queue_size=mission_control_utils.QUEUE_SIZE)
+    """rospy.Publisher: startup token answer publisher"""
+
     def __init__(self):
 
         self.subscribe_to_topics()
-
-
-    def set_token(self):
-        self._token = True
 
     def set_priority(self, prio):
         """ Sets node's priority 
@@ -115,6 +138,9 @@ class Behaviour:
         rospy.Subscriber(self.TOKEN_REQUEST_TOPIC, Int32, self.request_token_cb)
         rospy.Subscriber(self.TOKEN_RELEASE_TOPIC, Int32, self.release_token_cb)
 
+        rospy.Subscriber(self.TOKEN_ASK_TOPIC, Int32, self.ask_token_cb)
+        rospy.Subscriber(self.TOKEN_ANSWER_TOPIC, Answer, self.answer_token_cb)
+
         rospy.Subscriber(mission_control_utils.VAR_SET_TOPIC, Variable, self.set_variable_cb)
         rospy.Subscriber(mission_control_utils.VAR_GET_TOPIC, String, self.get_variable_cb)
     
@@ -153,6 +179,73 @@ class Behaviour:
 
         self._token = False
         self.release_pub.publish(rel_prio)
+
+    def ask_token(self):
+        """Asks for token on startup
+        This is different from token request because token is asked on startup and nobody has token at startup.
+        On startup token is given to node which has the highest priority.
+        If some node asks for token when somebody alrady has token, false is returned despite its priority.
+
+        Returns:
+            bool: True if node is allowed to ask token again, False otherwise
+        """
+
+        if self._token_ask_times > self.MAX_TOKEN_ASK_TIMES:
+            return False
+
+        if self._token_ask_times == self.MAX_TOKEN_ASK_TIMES:
+            if self._answer_false_gotten:
+                self._token = False
+            else:
+                self._token = self._answer
+
+            self._token_ask_times += 1
+
+            return False
+
+        self.ask_pub.publish(self._priority)
+
+        self._token_ask_times += 1
+
+        return True
+
+    def answer_token_cb(self, data):
+        """ Deals with incoming token answer message
+
+        If node has been given false as an answer even once, it has no chance to acquire token on startup
+
+        Args:
+            data (mission_control.msg.Answer): data.priority shows node's priority to which this answer is meant to ,
+        data.answer is the answer given to node
+        """
+
+        if self._priority == data.priority and not self._answer_false_gotten:
+            self._answer = data.answer
+
+            if not self._answer:
+                self._answer_false_gotten = True
+
+    def ask_token_cb(self, data):
+        """Deals with incoming token ask message
+
+        If node's priority, who asked, is higher or equal than the node's from who it's being asked, permission to acquire node is given.
+        If node's priority is lower, permission to acquire node is denied
+
+        If node, from who the token permission is asked, owns the token, permission to acquire node is denied
+        """
+
+        if data.data == self._priority:
+            return
+
+        msg = Answer()
+        msg.priority = data.data
+
+        if self._token or self._priority < data.data:
+            msg.answer = False
+        else: 
+            msg.answer = True
+
+        self.answer_pub.publish(msg)
 
     def request_token_cb(self, data):
         """ Deals with incoming token request message
@@ -341,9 +434,18 @@ class Behaviour:
 
         If the node is active and not running, activates node
         If the thread ends, deactivates node
+
+        On every call sends a message that shows that the node is alive
+
+        On startup asks for token as many times as it is defined in variable self.MAX_TOKEN_ASK_TIMES
         """
 
         self.node_is_ok()
+
+        allowed_to_ask_token = self.ask_token()
+
+        if allowed_to_ask_token:
+            return
 
         active = self.is_active()
 

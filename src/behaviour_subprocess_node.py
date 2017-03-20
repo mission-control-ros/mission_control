@@ -4,14 +4,10 @@ import behaviour_subprocess
 
 def main():
     rospy.init_node('behaviour_subprocess', anonymous=True)
-    token = rospy.get_param('~token')
     beha = behaviour_subprocess.Behaviour_Subprocess()
     beha.set_priority(rospy.get_param('~priority'))
     beha.set_active(rospy.get_param('~active'))
     beha.set_executable(rospy.get_param('~script'))
-
-    if token:
-        beha.set_token()
 
     """
     We need to make a little pause after start-up so some of the token release/request 

@@ -39,7 +39,6 @@ To make your script's variables available for other scripts use function set_var
 ```
   <node name="node1" pkg="mission_control" type="behaviour_subprocess_node.py" output="screen">
     <param name="priority" value="3" />
-    <param name="token" value="1" />
     <param name="active" value="int(self.get_var('counter6', 10)) &lt;= 10 and int(self.get_var('counter6', 10)) != 0" />
     <param name="script" value="$(find mission_control)/examples/scripts/custom_script_priority6.py" />
     <param name="wait_before_startup" value="2" />
@@ -50,7 +49,6 @@ To make your script's variables available for other scripts use function set_var
 
 * node type - script behaviour_subprocess_node.py has to be used
 * priority - defines nodes priority. Smaller number shows higher priority. Values are in range 1..N
-* token - shows which node has token on startup
 * active - string which will be evaluated to boolean value. It shows under which conditions node is allowed to be active. To access variables that initialized in scripts use function self.get_var('your_variables_name'). Function's self.get_var first parameter is the variable's name that is being requested. Second optional parameter is default value that is returned if no variable with given name is found. When no default value is supplied None is returned when requested variable is not found.
 * script - full path to script which will be executed when node becomes active
 * wait_before_startup (optional) - how many seconds node sleeps before execution in order to subscribe to all the topics. Default value is 1 second.
@@ -70,7 +68,6 @@ To make your StateMachine's variables available for other Statemachines use func
 ```
   <node name="node1" pkg="mission_control" type="behaviour_node.py" output="screen">
     <param name="priority" value="6" />
-    <param name="token" value="0" />
     <param name="active" value="int(self.get_var('counter6')) &lt;= 10 and bool(self.get_var('fuel_tank')) and int(self.get_var('counter6')) != 0" />
     <param name="state_machine" value="$(find mission_control)/examples/scripts/state_machine_priority6.py" />
     <param name="wait_before_startup" value="2" />
@@ -81,7 +78,6 @@ To make your StateMachine's variables available for other Statemachines use func
 
 * node type - script behaviour_node.py has to be used
 * priority - defines nodes priority. Smaller number shows higher priority. Values are in range 1..N
-* token - shows which node has token on startup
 * active - string which will be evaluated to boolean value. It shows under which conditions node is allowed to be active. To access variables that initialized in scripts use function self.get_var('your_variables_name'). Function's self.get_var first parameter is the variable's name that is being requested. Second optional parameter is default value that is returned if no variable with given name is found. When no default value is supplied None is returned when requested variable is not found.
 * state_machine - full path to script which holds the SMACH StateMachine that will be executed
 * wait_before_startup (optional) - how many seconds node sleeps before execution in order to subscribe to all the topics. Default value is 1 second.
