@@ -90,7 +90,12 @@ class Behaviour_Subprocess(behaviour.Behaviour):
     def activate(self):
         """ Activates node """
 
-        cmd = "exec python %s" % self._script
+        if(os.path.isfile(self._script)):
+            cmd = "exec python %s" % self._script
+        else:
+            rospy.loginfo("Mul on cpp script")
+            cmd = "exec rosrun %s" % self._script
+
         self._process = subprocess.Popen(cmd,shell=True)
         self._running = True
 
