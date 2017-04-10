@@ -3,9 +3,9 @@
 #include <string>
 #include <mission_control/mission_control_utils.h>
 
-int main (int argc, char** argv)
+int main (int argc, char* argv[])
 {
-  ros_init("mission_control_utils");
+  ros_init("mission_control_utils", argc, argv);
 
   std::string name = "counter6";
   std::string def_val = "10";

@@ -42,6 +42,7 @@ class Behaviour_Subprocess(behaviour.Behaviour):
         """
 
         if name in self._cache:
+            self.write_debug("Found variable named " + name + " in cache", 2)
             return self._cache[name]
 
         if counter == 0:
@@ -49,10 +50,14 @@ class Behaviour_Subprocess(behaviour.Behaviour):
             mission_control_utils.publish_get_var(name)
 
         if counter > Constants.MAX_CBS:
+            self.write_debug("Maximum callbacks for get_var function reached, setting variable named " + name + " with default value " + str(def_val), 2)
+
             self._cache[name] = def_val
             return def_val
 
         counter += 1
+
+        self.write_debug("Asking for variable named " + name + " (" + str(counter) + "/" + str(Constants.MAX_CBS) + ")", 3)
 
         time.sleep(Constants.VAR_RECHECK_DELAY)
 
@@ -80,6 +85,8 @@ class Behaviour_Subprocess(behaviour.Behaviour):
         os.kill(self._process.pid, signal.SIGSTOP)
         self._paused = True
 
+        self.write_debug("Pausing node", 1)
+
 
     def resume_behaviour(self):
         """ Resumes the current subprocess """
@@ -87,17 +94,29 @@ class Behaviour_Subprocess(behaviour.Behaviour):
         os.kill(self._process.pid, signal.SIGCONT)
         self._paused = False
 
+        self.write_debug("Resuming node", 1)
+
     def activate(self):
         """ Activates node """
 
         if(os.path.isfile(self._script)):
-            cmd = "exec python %s" % self._script
+            cmd = "exec python %s %d %s" % (self._script, self._debug_level, rospy.get_name())
         else:
             rospy.loginfo("Mul on cpp script")
-            cmd = "exec rosrun %s" % self._script
+            cmd = "exec rosrun %s %d %s" % (self._script, self._debug_level, rospy.get_name())
 
         self._process = subprocess.Popen(cmd,shell=True)
         self._running = True
+
+        self.write_debug("Node activates", 1)
+
+    def deactivate(self):
+        """ Deactivates node """
+
+        self._running = False
+
+        self.write_debug("Node deactivates", 1)
+
 
     def is_thread_alive(self):
         """ Checks if the subprocess, in which the script runs, is alive 
@@ -107,4 +126,8 @@ class Behaviour_Subprocess(behaviour.Behaviour):
         """
 
         self._process.poll()
-        return self._process.returncode == None
+        alive = self._process.returncode == None
+
+        self.write_debug("Thread is " + str(alive), 3)
+
+        return alive

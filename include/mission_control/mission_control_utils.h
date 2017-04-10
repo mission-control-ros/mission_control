@@ -70,11 +70,21 @@ static std::map<std::string, CallbackData> cch;
 static std::map<std::string, bool> _cch;
 
 /**
+  Debug level in range 0..3 which indicates how much debug messages will be printed. Zero indicates that debug is off, three is maximum level.
+*/
+static int debug_level = 0;
+
+/**
+  Behaviour node's name whose script uses this mission_control_utils library
+*/
+static std::string node_parent_name;
+
+/**
   Initializes ROS node and necessary publishers/subscribers for scripts 
     
   @param name Name for the created node
 */
-void ros_init(std::string name);
+void ros_init(std::string name, int argc, char* argv[]);
 
 /**
   Sends out message to all listening nodes about new variable value.
@@ -146,5 +156,13 @@ std::string get_var(std::string name, std::string def_val);
   @return requested variable's value
 */
 std::string get_var(std::string name, std::string def_val, int counter);
+
+/**
+  Writes node's script/object debug message
+
+  @param msg Debug message to be printed
+  @param level Debug message's level
+*/
+void write_debug(std::string msg, int level);
 
 #endif /* CACHE_H_ */

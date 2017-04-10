@@ -5,6 +5,7 @@ import behaviour_subprocess
 def main():
     rospy.init_node('behaviour_subprocess', anonymous=True)
     beha = behaviour_subprocess.Behaviour_Subprocess()
+    beha.set_debug_level(rospy.get_param('~debug', 0))
     beha.set_priority(rospy.get_param('~priority'))
     beha.set_active(rospy.get_param('~active'))
     beha.set_executable(rospy.get_param('~script'))

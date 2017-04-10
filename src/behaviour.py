@@ -4,6 +4,7 @@ import smach_ros
 import time
 import mission_control_utils
 from mission_control_utils_constants import Constants
+from mission_control_utils_cache import Cache
 from std_msgs.msg import Int32
 from std_msgs.msg import String
 from mission_control.msg import Variable
@@ -75,6 +76,9 @@ class Behaviour:
     _var_last_upt = {}
     """dict: holds he info when the variable was last set"""
 
+    _debug_level = 0
+    """int: node's debug level between 0..3 . 0 - lowest level, 3 - highest level"""
+
     request_pub = rospy.Publisher(TOKEN_REQUEST_TOPIC, Int32, queue_size=Constants.QUEUE_SIZE)
     """rospy.Publisher: token request publisher"""
 
@@ -92,7 +96,19 @@ class Behaviour:
 
     def __init__(self):
 
+        Cache.parent_node_name = rospy.get_name()
+
         self.subscribe_to_topics()
+
+    def set_debug_level(self, debug_level):
+        """ Sets node's debug level
+
+        Args:
+            debug_level (int): debug level
+        """
+
+        Cache.debug_level = debug_level
+        self._debug_level = debug_level
 
     def set_priority(self, prio):
         """ Sets node's priority 
@@ -159,12 +175,18 @@ class Behaviour:
     def is_active(self):
         """ Return boolean value which shows whether the node is active or not """
 
-        return eval(self._active_str)
+        active = eval(self._active_str)
+
+        self.write_debug("Activate string " + self._active_str + " evaluates to " + str(active), 3)
+
+        return active
 
     def request_token(self):
         """ Sends out token request message """
 
         self.request_pub.publish(self._priority)
+
+        self.write_debug("Requesting token", 2)
 
     def release_token(self, rel_prio):
         """ Releases held token
@@ -180,6 +202,8 @@ class Behaviour:
 
         self._token = False
         self.release_pub.publish(rel_prio)
+
+        self.write_debug("Releasing token to priority " + str(rel_prio), 2)
 
     def ask_token(self):
         """Asks for token on startup
@@ -197,8 +221,10 @@ class Behaviour:
         if self._token_ask_times == self.MAX_TOKEN_ASK_TIMES:
             if self._answer_false_gotten:
                 self._token = False
+                self.write_debug("Got False atleast at once on asking token", 2)
             else:
                 self._token = self._answer
+                self.write_debug("Got answer " + str(self._answer) + " when asking token on startup", 2)
 
             self._token_ask_times += 1
 
@@ -207,6 +233,8 @@ class Behaviour:
         self.ask_pub.publish(self._priority)
 
         self._token_ask_times += 1
+
+        self.write_debug("Asking token on startup (" + str(self._token_ask_times) + "/" + str(self.MAX_TOKEN_ASK_TIMES) + ")", 3)
 
         return True
 
@@ -246,6 +274,8 @@ class Behaviour:
         else: 
             msg.answer = True
 
+        self.write_debug("Priority " + str(data.data) + " asked for token, got answer " + str(msg.answer), 3)
+
         self.answer_pub.publish(msg)
 
     def request_token_cb(self, data):
@@ -255,9 +285,7 @@ class Behaviour:
             data (std_msgs.msg.Int32): priority number of the node who requested token
         """
         
-        if data.data == -1:
-            self._token = False
-        elif self._token and (data.data < self._priority or not self.is_active()):
+        if self._token and (data.data < self._priority or not self.is_active()):
             self.release_token(data.data)
 
     def release_token_cb(self, data):
@@ -273,6 +301,7 @@ class Behaviour:
             return
         
         self._token = True
+        self.write_debug("Got token", 1)
         
         if self._paused:
             self.resume_behaviour()
@@ -283,11 +312,15 @@ class Behaviour:
         self._sm._paused = True
         self._paused = True
 
+        self.write_debug("Pausing node", 1)
+
     def resume_behaviour(self):
         """ Resumes the current state machine """
 
         self._sm._paused = False
         self._paused = False
+
+        self.write_debug("Resuming node", 1)
 
     def set_variable_cb(self, data):
         """ Deals with incoming set variable msg
@@ -302,8 +335,11 @@ class Behaviour:
             self._cache[data.name] = data.value
             self._var_last_upt[data.name] = rospy.Time.now()
 
+            self.write_debug("Setting variable named " + data.name + " with value " + str(data.value), 2)
+
             if data.ttl > 0:
                 self._var_ttl[data.name] = rospy.Duration.from_sec(data.ttl)
+                self.write_debug("Setting variable named " + data.name + " with time to live " + str(data.ttl), 3)
 
     def get_variable_cb(self, data):
         """ Deals with get variable msg
@@ -335,6 +371,8 @@ class Behaviour:
         for state_name in states:
             state = states[state_name]
             if name in state.__dict__:
+                self.write_debug("Found variable named " + name + " in StateMachine object", 3)
+
                 return True, state.__dict__[name]
         return False, False
         
@@ -359,12 +397,15 @@ class Behaviour:
             self.check_var(name)
 
         if name in self._cache:
+            self.write_debug("Found variable named " + name + " in cache", 2)
             return self._cache[name]
         
         if counter == 0:
             found, var_in_my_sm = self.get_var_from_sm(name)
            
             if found: #Because returned value can be whatever
+                self.write_debug("Found variable named " + name + " in object's own StateMachine object", 2)
+
                 self._cache[name] = var_in_my_sm
                 self._var_last_upt[name] = rospy.Time.now()
                 return var_in_my_sm
@@ -373,11 +414,15 @@ class Behaviour:
             mission_control_utils.publish_get_var(name)
 
         if counter > Constants.MAX_CBS:
+            self.write_debug("Maximum callbacks for get_var function reached, setting variable named " + name + " with default value " + str(def_val), 2)
+
             self._cache[name] = def_val
             self._var_last_upt[name] = rospy.Time.now()
             return def_val
 
         counter += 1
+
+        self.write_debug("Asking for variable named " + name + " (" + str(counter) + "/" + str(Constants.MAX_CBS) + ")", 3)
 
         time.sleep(Constants.VAR_RECHECK_DELAY)
 
@@ -397,10 +442,23 @@ class Behaviour:
         var_last_upt = self._var_last_upt[name]
 
         if rospy.Time.now() > (var_last_upt + var_ttl):
-            if name in self._cache: del self._cache[name]
-            if "_"+name in self._cache: del self._cache["_" + name]
-            if name in self._var_ttl: del self._var_ttl[name]
-            if name in self._var_last_upt: del self._var_last_upt[name]
+            self.write_debug("Deleting variable named " + name + " from cache", 1)
+
+            if name in self._cache:
+                del self._cache[name]
+                self.write_debug("Deleting variable named " + name + " from self._cache", 3)
+
+            if "_"+name in self._cache:
+                del self._cache["_" + name]
+                self.write_debug("Deleting variable named _" + name + " from self._cache", 3)
+
+            if name in self._var_ttl:
+                del self._var_ttl[name]
+                self.write_debug("Deleting time to live for variable named " + name + " from self._var_ttl", 3)
+
+            if name in self._var_last_upt:
+                del self._var_last_upt[name]
+                self.write_debug("Deleting last update time for variable named " + name + " from self._var_last_upt", 3)
 
     def activate(self):
         """ Activates node """
@@ -410,10 +468,18 @@ class Behaviour:
         self._run_thread = Thread(target=self._sm.execute)
         self._run_thread.start()
 
+        self.write_debug("Node activates", 1)
+
     def deactivate(self):
         """ Deactivates node """
 
         self._running = False
+
+        self._run_thread.join()
+
+        del self._run_thread
+
+        self.write_debug("Node deactivates", 1)
 
     def is_thread_alive(self):
         """ Checks if the thread, in which the state machine runs, is alive 
@@ -422,12 +488,18 @@ class Behaviour:
             bool: True if thread is alive, False otherwise
         """
 
-        return self._run_thread.is_alive()
+        alive = self._run_thread.is_alive()
+
+        self.write_debug("Thread is " + str(alive), 3)
+
+        return alive
 
     def node_is_ok(self):
         """ Publishes message that shows that node is alive """
 
         self.ok_pub.publish(rospy.get_name())
+
+        self.write_debug("Publishing node is ok message", 3)
         
 
     def spin(self):
@@ -446,6 +518,7 @@ class Behaviour:
         allowed_to_ask_token = self.ask_token()
 
         if allowed_to_ask_token:
+            self.write_debug("Node is not allowed to ask token", 2)
             return
 
         active = self.is_active()
@@ -457,6 +530,17 @@ class Behaviour:
             self.activate()
         elif self._token and self._running and not self.is_thread_alive():
             self.deactivate()
+
+    def write_debug(self, msg, level):
+        """ Writes node's debug message
+
+        Args:
+            msg (string): debug message to be printed
+            level (int): debug message's level
+        """
+
+        if self._debug_level >= level:
+            rospy.loginfo(rospy.get_name() + " - " + msg)
 
 def _new_update_once(self):
     """ Overrides class' Statemachine function _update_once

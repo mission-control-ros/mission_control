@@ -14,11 +14,14 @@ void set_var_cb(const mission_control::Variable::ConstPtr& msg)
     data.str_data_def = true;
     cch[name] = data;
 
+    write_debug("Setting variable named " + name + " with value " + msg->value, 2);
+
     last_upt[name] = ros::Time::now();
 
     if(msg->ttl > 0)
     {
       ttl[name] = ros::Duration(msg->ttl);
+      write_debug("Setting variable named " + name + " with time to live " + std::to_string(msg->ttl), 3);
     }
   }
 
@@ -40,6 +43,8 @@ void set_var(std::string name, std::string value, int ttl)
   msg.ttl = ttl;
   set_pub.publish(msg);
 
+  write_debug("Publishing variable named " + name + " with value " + value + " with time to live " + std::to_string(ttl), 3);
+
   ros::spinOnce();
 }
 
@@ -60,10 +65,11 @@ std::string get_var(std::string name, std::string def_val, int counter)
 
   if(cch.find(name) != cch.end())
   {
+    write_debug("Found variable named " + name + " in cache", 2);
+
     std::map<std::string, CallbackData>::iterator it = cch.find(name);
 
     struct CallbackData data = it->second;
-    ROS_INFO_STREAM("Oli siin " << data.str_data);
     if(data.str_data_def)
     {
       return data.str_data;
@@ -79,6 +85,8 @@ std::string get_var(std::string name, std::string def_val, int counter)
 
   if(counter > MAX_CBS)
   {
+    write_debug("Maximum callbacks for get_var function reached, setting variable named " + name + " with default value " + def_val, 2);
+
     struct CallbackData data;
     data.str_data = def_val;
     data.str_data_def = true;
@@ -90,6 +98,8 @@ std::string get_var(std::string name, std::string def_val, int counter)
   }
 
   ros::spinOnce();
+
+  write_debug("Asking for variable named " + name + " (" + std::to_string(counter) + "/" + std::to_string(MAX_CBS) + ")", 3);
 
   sleep(VAR_RECHECK_DELAY);
 
@@ -110,17 +120,31 @@ void check_var(std::string name)
 
   if(ros::Time::now() > (var_last_up + var_ttl))
   {
+    write_debug("Deleting variable named " + name + " from cache", 1);
+
     if(cch.find(name) != cch.end())
-        cch.erase(name);
+    {
+      cch.erase(name);
+      write_debug("Deleting variable named " + name + " from cch", 3);
+    }
 
     if(_cch.find(under_name) != _cch.end())
-        cch.erase(under_name);
+    {
+      cch.erase(under_name);
+      write_debug("Deleting variable named _" + name + " from _cch", 3);
+    }
 
     if(ttl.find(name) != ttl.end())
-        ttl.erase(name);
+    {
+      ttl.erase(name);
+      write_debug("Deleting time to live for variable named " + name + " from ttl", 3);
+    }
 
     if(last_upt.find(name) != last_upt.end())
-        last_upt.erase(name);
+    {
+      last_upt.erase(name);
+      write_debug("Deleting last update time for variable named " + name + " from last_upt", 3);
+    }
   }
 }
 
@@ -132,14 +156,20 @@ void publish_get_var(std::string name)
   msg.data = name;
 
   get_pub.publish(msg);
+
+  write_debug("Publishing getting message for variable named " + name, 3);
+}
+
+//Writes node's script/object debug message
+void write_debug(std::string msg, int level)
+{
+  if(debug_level >= level)
+    ROS_INFO_STREAM(node_parent_name << " script/object - " << msg);
 }
 
 // Initializes ROS node and necessary publishers/subscribers for scripts
-void ros_init(std::string name)
+void ros_init(std::string name, int argc, char* argv[])
 {
-  int argc; 
-  char** argv;
-
   ros::init(argc, argv, name, ros::init_options::AnonymousName);
 
   ros::NodeHandle nh = ros::NodeHandle();
@@ -148,4 +178,12 @@ void ros_init(std::string name)
   get_pub = nh.advertise<std_msgs::String>(VAR_GET_TOPIC, QUEUE_SIZE);
 
   set_sub = nh.subscribe<mission_control::Variable>(VAR_SET_TOPIC, QUEUE_SIZE, set_var_cb);
+
+  if(argc == 3)
+  {
+    debug_level = atoi(argv[1]);
+    node_parent_name = argv[2];
+  }
+
+  write_debug("ROS init", 1);
 }

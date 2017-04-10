@@ -23,3 +23,9 @@ class Cache:
 
     set_sub = False
     """rospy.Subscriber: subscriber which receives messages for getting variables"""
+
+    debug_level = -1
+    """int: node's debug level whom's script or object uses this cache"""
+
+    parent_node_name = ""
+    """string: node's name whom's script or object uses this cache"""
