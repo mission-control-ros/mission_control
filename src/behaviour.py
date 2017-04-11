@@ -146,6 +146,7 @@ class Behaviour:
         self._sm._old_update_once = self._sm._update_once
         self._sm._update_once = func_type(_new_update_once, self._sm, smach.StateMachine)
         self._sm._paused = False
+        self._sm._update_done = False
 
         return True
 
@@ -311,6 +312,9 @@ class Behaviour:
 
         self._sm._paused = True
         self._paused = True
+
+        while not self._sm._update_done:
+            pass
 
         self.write_debug("Pausing node", 1)
 
@@ -550,5 +554,8 @@ def _new_update_once(self):
     """
 
     if not self._paused:
+        self._update_done = False
         return self._old_update_once()
+    else:
+        self._update_done = True
     return None
