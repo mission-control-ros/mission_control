@@ -9,6 +9,7 @@ from std_msgs.msg import Int32
 from std_msgs.msg import String
 from mission_control.msg import Variable
 from mission_control.msg import Answer
+from mission_control.msg import Health
 from threading import Thread
 import imp
 
@@ -85,7 +86,7 @@ class Behaviour:
     release_pub = rospy.Publisher(TOKEN_RELEASE_TOPIC, Int32, queue_size=Constants.QUEUE_SIZE)
     """rospy.Publisher: token release publisher"""
 
-    ok_pub = rospy.Publisher(WATCHDOG_OK_TOPIC, String, queue_size=Constants.QUEUE_SIZE)
+    ok_pub = rospy.Publisher(WATCHDOG_OK_TOPIC, Health, queue_size=Constants.QUEUE_SIZE)
     """rospy.Publisher: watchdog ok publisher"""
 
     ask_pub = rospy.Publisher(TOKEN_ASK_TOPIC, Int32, queue_size=Constants.QUEUE_SIZE)
@@ -501,7 +502,11 @@ class Behaviour:
     def node_is_ok(self):
         """ Publishes message that shows that node is alive """
 
-        self.ok_pub.publish(rospy.get_name())
+        msg = Health()
+        msg.node_name = rospy.get_name()
+        msg.token = self._token
+
+        self.ok_pub.publish(msg)
 
         self.write_debug("Publishing node is ok message", 3)
         

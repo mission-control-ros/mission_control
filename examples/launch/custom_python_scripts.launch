@@ -2,7 +2,11 @@
   <node name="watchdog" pkg="mission_control" type="watchdog_node.py" output="screen">
     <param name="debug" type="bool" value="true" />
     <param name="debug_file" value="$(find mission_control)/log/test.log" />
-    <param name="node_dead_after" value="0.5" />
+    <param name="node_dead_after" value="5" />
+  </node>
+
+  <node name="fail_safe" pkg="mission_control" type="behaviour_subprocess_fail_safe_node.py" output="screen">
+    <param name="script" value="$(find mission_control)/examples/scripts/custom_script_fail_safe.py" />
   </node>
 
   <node name="node1" pkg="mission_control" type="behaviour_subprocess_node.py" output="screen">

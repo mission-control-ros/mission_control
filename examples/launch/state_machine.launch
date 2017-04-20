@@ -5,6 +5,10 @@
     <param name="node_dead_after" value="0.5" />
   </node>
 
+  <node name="fail_safe" pkg="mission_control" type="behaviour_fail_safe_node.py" output="screen">
+    <param name="state_machine" value="$(find mission_control)/examples/scripts/state_machine_fail_safe.py" />
+  </node>
+
   <node name="node1" pkg="mission_control" type="behaviour_node.py" output="screen">
     <param name="priority" value="3" />
     <param name="active" value="int(self.get_var('counter6')) &lt; 6 and int(self.get_var('counter3')) != 0" />

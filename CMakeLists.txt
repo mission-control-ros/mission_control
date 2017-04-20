@@ -13,6 +13,7 @@ add_message_files(
   FILES
   Variable.msg
   Answer.msg
+  Health.msg
 )
 
 generate_messages(
