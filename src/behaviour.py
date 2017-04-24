@@ -12,6 +12,7 @@ from mission_control.msg import Answer
 from mission_control.msg import Health
 from threading import Thread
 import imp
+import uuid
 
 class Behaviour:
 
@@ -108,6 +109,11 @@ class Behaviour:
             debug_level (int): debug level
         """
 
+        if debug_level < 1:
+            debug_level = 1
+        elif debug_level > 3:
+            debug_level = 3
+
         Cache.debug_level = debug_level
         self._debug_level = debug_level
 
@@ -118,7 +124,10 @@ class Behaviour:
             prio (int): priority number
         """
 
-        self._priority = prio
+        if prio < 1:
+            self._priority = 1
+        else:
+            self._priority = prio
 
     def set_executable(self, file):
         """ Sets state machine that will be executed 
@@ -130,7 +139,7 @@ class Behaviour:
             bool: True if StateMachine was successfully found, False otherwise
         """
 
-        state_machine = imp.load_source('state_machine', file)
+        state_machine = imp.load_source(str(uuid.uuid1()), file)
         for var_name in  dir(state_machine):
             var = eval('state_machine.' + var_name)
 
