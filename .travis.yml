@@ -19,6 +19,7 @@ before_install:
   - wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
   - sudo apt-get update -qq
   - sudo apt-get install -y ros-$ROS_DISTRO-ros-base
+  - sudo apt-get install -y ros-$ROS_DISTRO-smach ros-$ROS_DISTRO-smach-ros ros-$ROS_DISTRO-smach-msgs
   - source /opt/ros/$ROS_DISTRO/setup.bash
   - sudo rosdep init
   - rosdep update
@@ -39,4 +40,5 @@ script:
   - catkin_make $( [ -f $CATKIN_OPTIONS ] && cat $CATKIN_OPTIONS )
   - source devel/setup.bash
   - cd src
+  - ls -la
   - python -m unittest discover -s test
