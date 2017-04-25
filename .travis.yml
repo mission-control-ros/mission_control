@@ -30,6 +30,8 @@ install:
   - cd ~/catkin_ws/src
   - catkin_init_workspace
   - cd ~/catkin_ws
+  - python -c 'import catkin_pkg; print(catkin_pkg.__file__)'
+  - python -c 'import sys; print(sys.path)'
   - catkin_make
   - source devel/setup.bash
   - cd ~/catkin_ws/src
