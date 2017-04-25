@@ -1,9 +1,7 @@
 dist: trusty
 sudo: required
 language:
-  - python
-python:
-  - "2.7"
+  - generic
 cache:
   - apt
 
@@ -30,7 +28,6 @@ install:
   - cd ~/catkin_ws/src
   - catkin_init_workspace
   - cd ~/catkin_ws
-  - ls -la /usr/local/lib/python2.7/*-packages/
   - catkin_make
   - source devel/setup.bash
   - cd ~/catkin_ws/src
