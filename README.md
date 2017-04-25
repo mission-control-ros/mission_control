@@ -1,4 +1,6 @@
-# Mission control for autonomous robots
+# Mission control for autonomous robots 
+
+[![Build Status](https://travis-ci.org/mission-control-ros/mission_control.svg?branch=master)](https://travis-ci.org/mission-control-ros/mission_control)
 
 This project is for creating mission control program for autonomous robots, by using either SMACH's Statemachines or custom scripts. SMACH can be found at http://wiki.ros.org/smach.
 
