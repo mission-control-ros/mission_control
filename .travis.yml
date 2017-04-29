@@ -23,6 +23,8 @@ before_install:
   - source /opt/ros/$ROS_DISTRO/setup.bash
   - sudo rosdep init
   - rosdep update
+  - pip install coverage
+  - sudo apt-get install -y python-dev gcc
 
 install:
   - mkdir -p ~/catkin_ws/src
