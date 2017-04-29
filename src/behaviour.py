@@ -31,7 +31,7 @@ class Behaviour:
     WATCHDOG_OK_TOPIC = "/mission_control/watchdog/ok"
     """string: watchdog ok topic name"""
 
-    MAX_TOKEN_ASK_TIMES = 3
+    MAX_TOKEN_ASK_TIMES = 2
     """int: how many times node will ask for token on startup"""
 
     _token_ask_times = 0
@@ -241,7 +241,8 @@ class Behaviour:
 
             return False
 
-        self.ask_pub.publish(self._priority)
+        if not self._answer_false_gotten:
+            self.ask_pub.publish(self._priority)
 
         self._token_ask_times += 1
 

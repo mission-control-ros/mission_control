@@ -1,5 +1,9 @@
+#!/usr/bin/env python
+import coverage_utils
+coverage_utils.cov_start()
 import sys
 import os
+import rospy
 import rospkg
 import unittest
 
@@ -50,13 +54,13 @@ class TestBehaviour(unittest.TestCase):
         self.assertTrue(Cache.debug_level == 1)
 
     def test_set_executable(self):
-        file_path = os.getcwd() + "/test/statemachine.py"
+        file_path = rospack.get_path('mission_control') + "/test/statemachine.py"
         success = self.beha.set_executable(file_path)
 
         self.assertTrue(success)
 
     def test_set_executable_statemachine_not_found(self):
-        file_path = os.getcwd() + "/test/not_statemachine.py"
+        file_path = rospack.get_path('mission_control') + "/test/not_statemachine.py"
         success = self.beha.set_executable(file_path)
 
         self.assertFalse(success)
@@ -85,3 +89,8 @@ class TestBehaviour(unittest.TestCase):
         active = self.beha.is_active()
 
         self.assertTrue(active)
+
+if __name__ == '__main__':
+    import rostest
+    rostest.rosrun('mission_control', 'test_behaviour', TestBehaviour)
+    coverage_utils.cov_stop()

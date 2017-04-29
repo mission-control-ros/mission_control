@@ -1,0 +1,24 @@
+<launch>
+  <node name="node1" pkg="mission_control" type="behaviour_on_startup_node.py" output="screen">
+    <param name="priority" value="3" />
+    <param name="active" type="str" value="False" />
+    <param name="state_machine" value="$(find mission_control)/test/statemachine.py" />
+    <param name="wait_before_startup" value="0.7" />
+  </node>
+
+  <node name="node2" pkg="mission_control" type="behaviour_on_startup_node.py" output="screen">
+    <param name="priority" value="1" />
+    <param name="active" type="str" value="False" />
+    <param name="state_machine" value="$(find mission_control)/test/statemachine.py" />
+    <param name="wait_before_startup" value="0.7" />
+  </node>
+
+  <node name="node3" pkg="mission_control" type="behaviour_on_startup_node.py" output="screen">
+    <param name="priority" value="6" />
+    <param name="active" type="str" value="False" />
+    <param name="state_machine" value="$(find mission_control)/test/statemachine.py" />
+    <param name="wait_before_startup" value="0.7" />
+  </node>
+
+  <test test-name="test_token_on_startup" pkg="mission_control" type="test_behaviour_on_startup.py" />
+</launch>
