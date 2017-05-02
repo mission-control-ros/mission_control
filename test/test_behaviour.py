@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import coverage_utils
 coverage_utils.cov_start()
+
 import sys
 import os
 import rospy

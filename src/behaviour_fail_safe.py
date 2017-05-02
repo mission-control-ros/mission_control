@@ -59,7 +59,6 @@ class Behaviour_Fail_Safe(behaviour.Behaviour):
             mission_control_utils.set_var(data.data, var)
 
 
-
     def is_active(self):
         """ Return boolean value which shows whether the node is active or not """
 

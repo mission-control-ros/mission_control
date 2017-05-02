@@ -24,7 +24,7 @@ class TestWatchdog(unittest.TestCase):
         self.msg_got = True
         self.watchdog_not_ok = data.data
 
-    def test_token_on_startup(self):
+    def test_watchdog(self):
         rospy.init_node('test_watchdog', anonymous=True)
         rospy.Subscriber("/mission_control/test/watchdog/node_not_ok", Bool, self.callback)
         ok_pub = rospy.Publisher("/mission_control/watchdog/ok", Health, queue_size=Constants.QUEUE_SIZE)
