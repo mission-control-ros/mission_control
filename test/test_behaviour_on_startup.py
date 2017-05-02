@@ -34,7 +34,7 @@ class TestBehaviourTokenOnStartup(unittest.TestCase):
 
     def test_token_on_startup(self):
         rospy.init_node('test_behaviour_on_startup', anonymous=True)
-        rospy.Subscriber("/mission_control/test/token_on_startup", Int32, self.callback)
+        rospy.Subscriber("/mission_control/test/startup/has_token", Int32, self.callback)
         timeout_t = time.time() + 10.0
         while not rospy.is_shutdown() and not self.msg_got and time.time() < timeout_t:
             time.sleep(0.1)

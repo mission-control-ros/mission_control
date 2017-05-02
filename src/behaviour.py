@@ -109,8 +109,8 @@ class Behaviour:
             debug_level (int): debug level
         """
 
-        if debug_level < 1:
-            debug_level = 1
+        if debug_level < 0:
+            debug_level = 0
         elif debug_level > 3:
             debug_level = 3
 
@@ -492,7 +492,7 @@ class Behaviour:
 
         self._run_thread.join()
 
-        del self._run_thread
+        self._run_thread = False
 
         self.write_debug("Node deactivates", 1)
 
@@ -502,6 +502,9 @@ class Behaviour:
         Returns:
             bool: True if thread is alive, False otherwise
         """
+
+        if not self._run_thread:
+            return False
 
         alive = self._run_thread.is_alive()
 

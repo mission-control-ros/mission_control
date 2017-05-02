@@ -50,8 +50,8 @@ class TestBehaviour(unittest.TestCase):
 
         self.beha.set_debug_level(0)
 
-        self.assertTrue(self.beha._debug_level == 1)
-        self.assertTrue(Cache.debug_level == 1)
+        self.assertTrue(self.beha._debug_level == 0)
+        self.assertTrue(Cache.debug_level == 0)
 
     def test_set_executable(self):
         file_path = rospack.get_path('mission_control') + "/test/statemachine.py"
@@ -89,6 +89,11 @@ class TestBehaviour(unittest.TestCase):
         active = self.beha.is_active()
 
         self.assertTrue(active)
+
+    def test_is_thread_alive(self):
+        alive = self.beha.is_thread_alive()
+
+        self.assertFalse(alive)
 
 if __name__ == '__main__':
     import rostest

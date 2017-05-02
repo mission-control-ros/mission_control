@@ -114,6 +114,7 @@ class Behaviour_Subprocess(behaviour.Behaviour):
         """ Deactivates node """
 
         self._running = False
+        self._process = False
 
         self.write_debug("Node deactivates", 1)
 
