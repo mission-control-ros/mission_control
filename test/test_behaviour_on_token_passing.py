@@ -23,6 +23,10 @@ class TestBehaviourTokenPassing(unittest.TestCase):
 
     prio6_resumed = False
 
+    prio6_killed = False
+
+    prio6_killed_got = False
+
     def token_callback(self, data):
         if len(self.token_got_prio) == 0:
             self.token_got_prio.append(data.data)
@@ -38,19 +42,26 @@ class TestBehaviourTokenPassing(unittest.TestCase):
     def prio6_resume_callback(self, data):
         self.prio6_resumed = data.data
 
+    def prio6_killed_callback(self, data):
+        self.prio6_killed = data.data
+        self.prio6_killed_got = True
+
     def test_token_passing(self):
         rospy.init_node('test_behaviour_on_token_passing', anonymous=True)
         rospy.Subscriber("/mission_control/test/token_passing/has_token", Int32, self.token_callback)
         rospy.Subscriber("/mission_control/test/token_passing/priority6_paused", Bool, self.prio6_pause_callback)
         rospy.Subscriber("/mission_control/test/token_passing/priority6_resumed", Bool, self.prio6_resume_callback)
+        rospy.Subscriber("/mission_control/test/token_passing/priority6_killed", Bool, self.prio6_killed_callback)
 
         timeout_t = time.time() + 60.0
-        while not rospy.is_shutdown() and len(self.token_got_prio) != 3 and time.time() < timeout_t:
+        while not rospy.is_shutdown() and not self.prio6_killed_got and time.time() < timeout_t:
             time.sleep(0.1)
+
         self.assertTrue(self.token_got_prio == [6, 3, 6])
 
         self.assertTrue(self.prio6_paused)
         self.assertTrue(self.prio6_resumed)
+        self.assertTrue(self.prio6_killed)
 
 if __name__ == '__main__':
     import rostest

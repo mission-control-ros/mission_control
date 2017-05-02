@@ -48,7 +48,7 @@ class TestBehaviour(unittest.TestCase):
         self.assertTrue(self.beha._debug_level == 3)
         self.assertTrue(Cache.debug_level == 3)
 
-        self.beha.set_debug_level(0)
+        self.beha.set_debug_level(-1)
 
         self.assertTrue(self.beha._debug_level == 0)
         self.assertTrue(Cache.debug_level == 0)

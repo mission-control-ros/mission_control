@@ -47,3 +47,11 @@ add_dependencies(custom_script_priority6 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 target_link_libraries(custom_script_priority6
   ${catkin_LIBRARIES}
 )
+
+add_executable(test_custom_script_priority6 test/test_custom_script_priority6.cpp src/mission_control_utils.cpp)
+
+add_dependencies(test_custom_script_priority6 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(test_custom_script_priority6
+  ${catkin_LIBRARIES}
+)

@@ -31,8 +31,10 @@ def main():
     token_pub = rospy.Publisher("/mission_control/test/token_passing/has_token", Int32, queue_size=Constants.QUEUE_SIZE)
     prio6_paused_pub = rospy.Publisher("/mission_control/test/token_passing/priority6_paused", Bool, queue_size=Constants.QUEUE_SIZE)
     prio6_resumed_pub = rospy.Publisher("/mission_control/test/token_passing/priority6_resumed", Bool, queue_size=Constants.QUEUE_SIZE)
+    prio6_killed_pub = rospy.Publisher("/mission_control/test/token_passing/priority6_killed", Bool, queue_size=Constants.QUEUE_SIZE)
 
     prio6_paused = False
+    prio6_resumed = False
     print_report = False
 
     rate = rospy.Rate(2)
@@ -49,6 +51,10 @@ def main():
 
         if beha._priority == 6 and prio6_paused and not beha._paused and not beha._sm._paused:
             prio6_resumed_pub.publish(True)
+            prio6_resumed = True
+
+        if beha._priority == 6 and prio6_paused and prio6_resumed and not beha._running:
+            prio6_killed_pub.publish(True)
 
         if beha._priority == 6:
             print_report = True
