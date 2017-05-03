@@ -41,5 +41,7 @@ script:
   - cd ~/catkin_ws
   - catkin_make $( [ -f $CATKIN_OPTIONS ] && cat $CATKIN_OPTIONS )
   - source devel/setup.bash
-  - cd src/mission_control/test
+  - cd src/mission_control
+  - mkdir log
+  - cd test
   - ./run_tests.sh
