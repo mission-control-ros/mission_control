@@ -51,7 +51,6 @@ class TestWatchdogFailSafe(unittest.TestCase):
             if self.fail_safe_started:
                 foo = int(mission_control_utils.get_var("test_counter6_foo", -1)) #Getting data from fail safe node
                 bar = int(mission_control_utils.get_var("test_counter6_bar", -1)) #Getting data from fail safe node
-                print foo, bar
             time.sleep(0.1)
 
         self.assertTrue(self.fail_safe_finished)

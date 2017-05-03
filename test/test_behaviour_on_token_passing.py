@@ -34,7 +34,6 @@ class TestBehaviourTokenPassing(unittest.TestCase):
             last = self.token_got_prio[len(self.token_got_prio) - 1]
             if last != data.data:
                 self.token_got_prio.append(data.data)
-        print self.token_got_prio
 
     def prio6_pause_callback(self, data):
         self.prio6_paused = data.data
