@@ -119,3 +119,43 @@ Monitors all the active nodes and tells the user when some of the nodes become u
 * debug (optional) - if true debug info is displayed, default value is false
 * debug_file (optional) - logs all the debug info into given file
 * node_dead_after (optional) - in seconds the amount of time passed for node to be declared unresponsive, default value is 2 seconds
+
+## Use case
+
+To see how mission control works in simulation using Gazebo, follow these steps.
+
+Firstly be sure that you have installed ROS Desktop-Full isntallation that can be found here: http://wiki.ros.org/kinetic/Installation/Ubuntu
+
+Secondly install ros-kinetic-turtlebot-navigation and ros-kinetic-turtlebot-gazebo
+```
+sudo apt-get install ros-kinetic-turtlebot-navigation
+sudo apt-get install ros-kinetic-turtlebot-gazebo
+```
+
+If that is done, run these commands
+```
+roscd mission_control/examples/scripts/
+source set_env_variables.sh
+roslaunch mission_control use_case_world.launch
+```
+
+When gazebo has started and you can see the willow garage office, then open a NEW terminal and run these commands, which will spawn a robot into the gazebo world
+```
+roscd mission_control/examples/scripts/
+source set_env_variables.sh
+roslaunch mission_control use_case_robot.launch
+```
+
+If you can see the robot in the willow garage office, the again open a NEW terminal and run these commands
+```
+roscd mission_control/examples/scripts/
+source set_env_variables.sh
+roslaunch mission_control amcl.launch
+```
+
+When the previous command prints out message 'odom received!', then once more open a NEW terminal and run this command
+```
+roslaunch mission_control use_case.launch
+```
+
+This command should emulate robots battery and also give commands to move between two rooms. When battery level drops below 20, then the robot should move to a thrid room, where it's battery should recharge. After the battery level is above 95, it should start moving between two rooms again.
