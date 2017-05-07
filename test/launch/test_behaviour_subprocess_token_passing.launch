@@ -1,5 +1,5 @@
 <launch>
-  <node name="node1" pkg="mission_control" type="behaviour_subprocess_on_token_passing_node.py" output="screen">
+  <node name="node1" pkg="mission_control" type="behaviour_subprocess_on_token_passing_node_no_coverage.py" output="screen">
     <param name="priority" value="3" />
     <param name="active" value="int(self.get_var('test_counter6', 10)) &lt; 6 and int(self.get_var('test_counter3', 10)) != 0" />
     <param name="script" value="$(find mission_control)/test/test_custom_script_priority3.py" />

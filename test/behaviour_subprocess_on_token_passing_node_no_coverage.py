@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-import coverage_utils
-coverage_utils.cov_start()
-
 import rospy
 import sys
 import rospkg
@@ -55,8 +52,6 @@ def main():
 
         if beha._priority == 6 and prio6_paused and prio6_resumed and not beha._running:
             prio6_killed_pub.publish(True)
-
-    coverage_utils.cov_stop()
 
 if __name__ == '__main__':
     try:

@@ -13,7 +13,10 @@ class Behaviour_Fail_Safe(behaviour.Behaviour):
     ACTIVATE_TOPIC = "/mission_control/watchdog/fail_safe/activate"
 
     _active = False
+    """bool: indicates whether fail safe is active"""
+
     _activated_once = False
+    """bool: indicates whether fail safe has been activated once"""
 
     def subscribe_to_topics(self):
 
@@ -25,6 +28,15 @@ class Behaviour_Fail_Safe(behaviour.Behaviour):
         rospy.Subscriber(self.ACTIVATE_TOPIC, Bool, self.set_fail_safe_activated)
 
     def set_fail_safe_activated(self, data):
+        """ Deals with incoming fail safe activation msg
+
+        Sets fail safe node active and marks that fail safe node has been activated once.
+        Another variable has to be used to show that fail safe node has been activated, because 
+        fail safe may end it's job and go unactive and so we shouldn't activate this again.
+
+        Args:
+            data (std_msgs.msg.Bool): data.data shows whether node should start with the token or not
+        """
         
         if not self._activated_once:
             self._active = True
