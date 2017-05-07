@@ -29,7 +29,7 @@ class TestMissionControlUtilsSetVar(unittest.TestCase):
     def start_asking_callback(self, data):
         self.start_asking = True
 
-    def test_variable_counter6(self):
+    def test_set_variable_counter6(self):
 
         rospy.Subscriber("/mission_control/test/mission_control_utils/start_asking", Bool, self.start_asking_callback)
         timeout_t = time.time() + 60.0
