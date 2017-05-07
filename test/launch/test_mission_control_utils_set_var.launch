@@ -1,0 +1,9 @@
+<launch>
+  <node name="node1" pkg="mission_control" type="behaviour_subprocess_node.py" output="screen">
+    <param name="priority" value="6" />
+    <param name="active" type="string" value="True" />
+    <param name="script" value="$(find mission_control)/test/test_custom_script_variable_priority6.py" />
+  </node>
+
+  <test test-name="test_mission_control_utils" pkg="mission_control" type="test_mission_control_utils.py" />
+</launch>

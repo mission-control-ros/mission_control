@@ -120,6 +120,39 @@ Monitors all the active nodes and tells the user when some of the nodes become u
 * debug_file (optional) - logs all the debug info into given file
 * node_dead_after (optional) - in seconds the amount of time passed for node to be declared unresponsive, default value is 2 seconds
 
+## Watchdog fail safe
+
+Starts after watchdog has detected that some node has unexpectedly died or won't send health messages. Both SMACH StateMachine objects and custom scripts can be used.
+
+## Deployment for watchdog fail safe
+
+#### ROS launch file's node example for SMACH StateMachines
+```
+  <node name="fail_safe" pkg="mission_control" type="behaviour_fail_safe_node.py" output="screen">
+    <param name="state_machine" value="$(find mission_control)/examples/scripts/state_machine_fail_safe.py" />
+    <param name="debug" value="1" />
+  </node>
+```
+
+#### Node's parameters explanation
+* node type - script behaviour_fail_safe_node.py has to be used
+* state_machine - full path to script which holds the SMACH StateMachine that will be executed
+* debug (optional) - Debug level which determines how many debug messages are displayed. This value ranges from 0 to 3. Zero turns debugging off. Default value is 0.
+
+
+#### ROS launch file's node example for custom scripts
+```
+  <node name="fail_safe" pkg="mission_control" type="behaviour_subprocess_fail_safe_node.py" output="screen">
+    <param name="script" value="$(find mission_control)/examples/scripts/custom_script_fail_safe.py" />
+  </node>
+```
+
+#### Node's parameters explanation
+* node type - script behaviour_subprocess_fail_safe_node.py has to be used
+* script - For python scripts full path to script which will be executed when node becomes active. For C++ scripts string containing ROS package name and C++ executable separated with space.
+* debug (optional) - Debug level which determines how many debug messages are displayed. This value ranges from 0 to 3. Zero turns debugging off. Default value is 0.
+
+
 ## Use case
 
 To see how mission control works in simulation using Gazebo, follow these steps.
@@ -132,7 +165,7 @@ sudo apt-get install ros-kinetic-turtlebot-navigation
 sudo apt-get install ros-kinetic-turtlebot-gazebo
 ```
 
-If that is done, run these commands
+If that is done, run these commands (NB! if the command roslaunch mission_control use_case_world.launch gives an error with exit code 139, then try to run it again until it starts up. There seems to be an error with the link between ROS and Gazebo)
 ```
 roscd mission_control/examples/scripts/
 source set_env_variables.sh
