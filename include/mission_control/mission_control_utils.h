@@ -13,6 +13,8 @@
 
 #define VAR_RECHECK_DELAY 0.5
 
+#define MICROSECONDS_IN_SECOND 1000000
+
 #define VAR_GET_TOPIC "/mission_control/variable/get"
 
 #define VAR_SET_TOPIC "/mission_control/variable/set"

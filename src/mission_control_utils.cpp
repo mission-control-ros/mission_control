@@ -83,6 +83,8 @@ std::string get_var(std::string name, std::string def_val, int counter)
 
   publish_get_var(name);
 
+  ros::spinOnce();
+
   if(counter > MAX_CBS)
   {
     write_debug("Maximum callbacks for get_var function reached, setting variable named " + name + " with default value " + def_val, 2);
@@ -101,7 +103,10 @@ std::string get_var(std::string name, std::string def_val, int counter)
 
   write_debug("Asking for variable named " + name + " (" + std::to_string(counter) + "/" + std::to_string(MAX_CBS) + ")", 3);
 
-  sleep(VAR_RECHECK_DELAY);
+  if(VAR_RECHECK_DELAY > 0)
+    usleep(VAR_RECHECK_DELAY * MICROSECONDS_IN_SECOND);
+  else
+    usleep(0.5 * MICROSECONDS_IN_SECOND);
 
   ros::spinOnce();
 
