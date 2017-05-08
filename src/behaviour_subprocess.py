@@ -102,7 +102,6 @@ class Behaviour_Subprocess(behaviour.Behaviour):
         if(os.path.isfile(self._script)):
             cmd = "exec python %s %d %s" % (self._script, self._debug_level, rospy.get_name())
         else:
-            rospy.loginfo("Mul on cpp script")
             cmd = "exec rosrun %s %d %s" % (self._script, self._debug_level, rospy.get_name())
 
         self._process = subprocess.Popen(cmd,shell=True)
