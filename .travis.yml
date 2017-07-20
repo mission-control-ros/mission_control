@@ -25,6 +25,7 @@ before_install:
   - rosdep update
   - sudo pip install coverage
   - sudo apt-get install -y python-dev gcc
+  - sudo apt-get install python-catkin-pkg
 
 install:
   - mkdir -p ~/catkin_ws/src
