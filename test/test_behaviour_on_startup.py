@@ -38,7 +38,7 @@ class TestBehaviourTokenOnStartup(unittest.TestCase):
         timeout_t = time.time() + 10.0
         while not rospy.is_shutdown() and not self.msg_got and time.time() < timeout_t:
             time.sleep(0.1)
-        self.assertTrue(self.token_got_prio == 11)
+        self.assertTrue(self.token_got_prio == 1)
 
 
 if __name__ == '__main__':
