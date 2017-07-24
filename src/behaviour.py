@@ -2,6 +2,10 @@ import rospy
 import smach
 import smach_ros
 import time
+#import imp
+import subprocess
+import signal
+import os
 import mission_control_utils
 from mission_control_utils_constants import Constants
 from mission_control_utils_cache import Cache
@@ -10,9 +14,6 @@ from std_msgs.msg import String
 from mission_control.msg import Variable
 from mission_control.msg import Answer
 from mission_control.msg import Health
-from threading import Thread
-import imp
-import uuid
 
 class Behaviour:
 
@@ -63,11 +64,11 @@ class Behaviour:
     _running = False
     """bool: shows if the state machine is active or not"""
 
-    _run_thread = False
-    """thread.Thread: thread, in which the state machine is working"""
+    _process = False
+    """subprocess.Popen: subprocess where script will be executed """
 
-    _sm = False
-    """statemachine.Statemachine: current nodes state machine"""
+    _script = ''
+    """string: script's full path, that will be executed """
 
     _cache = {}
     """dict: all the variables that node uses from state machines are stored here"""
@@ -130,35 +131,12 @@ class Behaviour:
             self._priority = prio
 
     def set_executable(self, file):
-        """ Sets state machine that will be executed 
+        """ Sets executable script 
         
         Args:
-            file (string): path to python file where atleast one state machine is defined
-
-        Returns:
-            bool: True if StateMachine was successfully found, False otherwise
+            file (string): file's name, that will be executed
         """
-
-        state_machine = imp.load_source(str(uuid.uuid1()), file)
-        for var_name in  dir(state_machine):
-            var = eval('state_machine.' + var_name)
-
-            if isinstance(var, smach.StateMachine):
-                self._sm = var
-                break
-
-        if not self._sm:
-            rospy.logfatal("Could not find StateMachine from file %s" % file)
-            rospy.signal_shutdown("Could not find StateMachine from file %s" % file)
-            return False
-
-        func_type = type(self._sm._update_once)
-        self._sm._old_update_once = self._sm._update_once
-        self._sm._update_once = func_type(_new_update_once, self._sm, smach.StateMachine)
-        self._sm._paused = False
-        self._sm._update_done = False
-
-        return True
+        self._script = file
 
     def subscribe_to_topics(self):
         """ Subscribes to all ROS topics """
@@ -319,20 +297,17 @@ class Behaviour:
             self.resume_behaviour()
 
     def pause_behaviour(self):
-        """ Pauses the current state machine """
+        """ Pauses the current subprocess """
 
-        self._sm._paused = True
+        os.kill(self._process.pid, signal.SIGSTOP)
         self._paused = True
-
-        while not self._sm._update_done:
-            pass
 
         self.write_debug("Pausing node", 1)
 
     def resume_behaviour(self):
-        """ Resumes the current state machine """
+        """ Resumes the current subprocess """
 
-        self._sm._paused = False
+        os.kill(self._process.pid, signal.SIGCONT)
         self._paused = False
 
         self.write_debug("Resuming node", 1)
@@ -359,72 +334,36 @@ class Behaviour:
     def get_variable_cb(self, data):
         """ Deals with get variable msg
 
-        Searches current node's state machine for the given variable
+        Searches current node's cache for the variable
         If variable is found, the sends out set variable msg
 
         Args:
             data (std_msgs.msg.String): variable name that is being searched
         """
 
-        found, var = self.get_var_from_sm(data.data)
-        if found:
+        if data.data in self._cache:
+            var = self._cache[data.data]
             mission_control_utils.set_var(data.data, var)
-
-    def get_var_from_sm(self, name):
-        """ Searches node's state machine for given variable
-
-        Args:
-            name (string): variable name which is being searched
-
-        Returns:
-            bool: True if variable found, False otherwise
-            mixed: If variable found, then that variables value is returned, otherwise False is returned
-        """
-
-        states = self._sm.__dict__['_states']
-
-        for state_name in states:
-            state = states[state_name]
-            if name in state.__dict__:
-                self.write_debug("Found variable named " + name + " in StateMachine object", 3)
-
-                return True, state.__dict__[name]
-        return False, False
-        
 
     def get_var(self, name, def_val=None, counter=0):
         """ Request given variable's value
 
         First: checks cache, if variable exists there
-        Second: if variable is not in cache then searches variable from iteself's state machine
-        Third: lastly, if variable is not in node's state machine, requests variable from all initialized nodes
+        Second: if variable is not in cache then searches variable from iteself's statemachine
+        Third: lastly, if variable is not in node's statemachine, requests variable from all initialized nodes
 
         Args:
             name (string): requested variable's name
-            def_val (mixed): default value when requested variabele is not found
-            counter (int): number of times function is in recursion
 
         Returns:
             mixed: requested variable's value
         """
 
-        if counter == 0:
-            self.check_var(name)
-
         if name in self._cache:
             self.write_debug("Found variable named " + name + " in cache", 2)
             return self._cache[name]
-        
+
         if counter == 0:
-            found, var_in_my_sm = self.get_var_from_sm(name)
-           
-            if found: #Because returned value can be whatever
-                self.write_debug("Found variable named " + name + " in object's own StateMachine object", 2)
-
-                self._cache[name] = var_in_my_sm
-                self._var_last_upt[name] = rospy.Time.now()
-                return var_in_my_sm
-
             self._cache["_"+name] = True
             mission_control_utils.publish_get_var(name)
 
@@ -432,7 +371,6 @@ class Behaviour:
             self.write_debug("Maximum callbacks for get_var function reached, setting variable named " + name + " with default value " + str(def_val), 2)
 
             self._cache[name] = def_val
-            self._var_last_upt[name] = rospy.Time.now()
             return def_val
 
         counter += 1
@@ -442,6 +380,7 @@ class Behaviour:
         time.sleep(Constants.VAR_RECHECK_DELAY)
 
         return self.get_var(name, def_val, counter)
+
 
     def check_var(self, name):
         """Checks if the variable in cache is new enough or needs to be deleted
@@ -478,10 +417,13 @@ class Behaviour:
     def activate(self):
         """ Activates node """
 
-        self._running = True
+        if(os.path.isfile(self._script)):
+            cmd = "exec python %s %d %s" % (self._script, self._debug_level, rospy.get_name())
+        else:
+            cmd = "exec rosrun %s %d %s" % (self._script, self._debug_level, rospy.get_name())
 
-        self._run_thread = Thread(target=self._sm.execute)
-        self._run_thread.start()
+        self._process = subprocess.Popen(cmd,shell=True)
+        self._running = True
 
         self.write_debug("Node activates", 1)
 
@@ -489,24 +431,19 @@ class Behaviour:
         """ Deactivates node """
 
         self._running = False
-
-        self._run_thread.join()
-
-        self._run_thread = False
+        self._process = False
 
         self.write_debug("Node deactivates", 1)
 
     def is_thread_alive(self):
-        """ Checks if the thread, in which the state machine runs, is alive 
+        """ Checks if the subprocess, in which the script runs, is alive 
 
         Returns:
-            bool: True if thread is alive, False otherwise
+            bool: True if subprocess is alive, False otherwise
         """
 
-        if not self._run_thread:
-            return False
-
-        alive = self._run_thread.is_alive()
+        self._process.poll()
+        alive = self._process.returncode == None
 
         self.write_debug("Thread is " + str(alive), 3)
 
@@ -563,17 +500,3 @@ class Behaviour:
 
         if self._debug_level >= level:
             rospy.loginfo(rospy.get_name() + " - " + msg)
-
-def _new_update_once(self):
-    """ Overrides class' Statemachine function _update_once
-
-    This is necessary so the state machine inside the node could be paused and later resumed
-
-    """
-
-    if not self._paused:
-        self._update_done = False
-        return self._old_update_once()
-    else:
-        self._update_done = True
-    return None
