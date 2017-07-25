@@ -12,8 +12,6 @@ files = [
   'watchdog',
   'behaviour_fail_safe',
   'behaviour',
-  'behaviour_subprocess_fail_safe',
-  'behaviour_subprocess',
   'mission_control_utils_constants'
 ]
 

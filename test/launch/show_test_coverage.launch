@@ -1,0 +1,6 @@
+<launch>
+  <node name="watchdog" pkg="mission_control" type="show_test_coverage_node.py" output="screen">
+  </node>
+
+  <test test-name="test_fake" pkg="mission_control" type="show_test_coverage_fake_test.py" />
+</launch>

@@ -11,7 +11,7 @@ sys.path.append("%s/src" % mission_control_path)
 
 import mission_control_utils
 
-mission_control_utils.ros_init("custom_script_priority3")
+mission_control_utils.ros_init("test_custom_script_priority3")
 
 test_counter3 = 10
 

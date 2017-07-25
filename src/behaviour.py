@@ -369,7 +369,10 @@ class Behaviour:
         self.explored = []
         self.types = [smach.StateMachine]
 
-        state_machine = imp.load_source(str(uuid.uuid1()), self._script)
+        try:
+            state_machine = imp.load_source(str(uuid.uuid1()), self._script)
+        except:
+            return found, variable
 
         for var in  dir(state_machine):
             obj = eval('state_machine.' + var)

@@ -5,7 +5,7 @@
 
 int main (int argc, char* argv[])
 {
-  ros_init("mission_control_utils", argc, argv);
+  ros_init("test_custom_script_priority6", argc, argv);
 
   std::string name = "test_counter6";
   std::string def_val = "10";

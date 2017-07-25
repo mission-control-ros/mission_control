@@ -15,9 +15,11 @@ TESTS=(
   test_mission_control_utils_cpp_set_var.launch
   test_mission_control_utils_cpp_get_var.launch
   test_behaviour.launch
+  show_test_coverage.launch
 )
 
 EXIT_CODE=0
+FAILED=0
 
 for TEST in ${TESTS[@]}; do
 
@@ -28,8 +30,15 @@ for TEST in ${TESTS[@]}; do
 
   if [ $TEST_RESULT != 0 ]; then
     EXIT_CODE=1
+    ((FAILED++))
   fi
 
 done
+
+rm -f $(rospack find mission_control)/test.log
+
+echo
+echo "Totally ${FAILED} tests failed!"
+echo
 
 exit $EXIT_CODE

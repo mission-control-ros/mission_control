@@ -12,7 +12,7 @@ from std_msgs.msg import Int32
 from std_msgs.msg import Bool
 
 def main():
-    rospy.init_node('behaviour_token_passing', anonymous=True)
+    rospy.init_node('behaviour_token_passing_no_coverage', anonymous=True)
     beha = behaviour.Behaviour()
     beha.set_debug_level(rospy.get_param('~debug', 0))
     beha.set_priority(rospy.get_param('~priority'))
