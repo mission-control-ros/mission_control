@@ -50,3 +50,7 @@ with sm:
                            transitions={'outcome1':'BAR', 'outcome2':'outcome4'})
     smach.StateMachine.add('BAR', Bar(), 
                            transitions={'outcome1':'FOO'})
+
+if __name__ == '__main__':
+    mission_control_utils.ros_init('test_state_machine_priority3')
+    sm.execute()

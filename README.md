@@ -109,7 +109,7 @@ Monitors all the active nodes and tells the user when some of the nodes become u
 ```
   <node name="watchdog" pkg="mission_control" type="watchdog_node.py" output="screen">
     <param name="debug" type="bool" value="true" />
-    <param name="debug_file" value="$(find mission_control)/log/test.log" />
+    <param name="debug_file" value="$(find mission_control)/test.log" />
     <param name="node_dead_after" value="0.5" />
   </node>
 ```

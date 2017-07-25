@@ -20,7 +20,7 @@ def main():
     beha.set_debug_level(rospy.get_param('~debug', 0))
     beha.set_priority(rospy.get_param('~priority'))
     beha.set_active(rospy.get_param('~active'))
-    beha.set_executable(rospy.get_param('~state_machine'))
+    beha.set_executable(rospy.get_param('~script'))
 
     """
     We need to make a little pause after start-up so some of the token release/request 
@@ -44,11 +44,11 @@ def main():
         if beha._token and beha._running:
             token_pub.publish(beha._priority)
 
-        if beha._priority == 6 and beha._paused and beha._sm._paused:
+        if beha._priority == 6 and beha._paused:
             prio6_paused_pub.publish(True)
             prio6_paused = True
 
-        if beha._priority == 6 and prio6_paused and not beha._paused and not beha._sm._paused:
+        if beha._priority == 6 and prio6_paused and not beha._paused:
             prio6_resumed_pub.publish(True)
             prio6_resumed = True
 

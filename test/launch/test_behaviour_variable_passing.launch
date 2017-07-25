@@ -2,13 +2,13 @@
   <node name="node1" pkg="mission_control" type="behaviour_node.py" output="screen">
     <param name="priority" value="3" />
     <param name="active" type="string" value="False" />
-    <param name="state_machine" value="$(find mission_control)/test/test_state_machine_variable3.py" />
+    <param name="script" value="$(find mission_control)/test/test_state_machine_variable3.py" />
   </node>
 
   <node name="node2" pkg="mission_control" type="behaviour_variable_node.py" output="screen">
     <param name="priority" value="6" />
     <param name="active" type="string" value="True" />
-    <param name="state_machine" value="$(find mission_control)/test/test_state_machine_variable6.py" />
+    <param name="script" value="$(find mission_control)/test/test_state_machine_variable6.py" />
   </node>
 
   <test test-name="test_token_passing" pkg="mission_control" type="test_behaviour_variable.py" />

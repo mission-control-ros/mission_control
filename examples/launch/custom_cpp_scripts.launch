@@ -1,16 +1,16 @@
 <launch>
   <node name="watchdog" pkg="mission_control" type="watchdog_node.py" output="screen">
     <param name="debug" type="bool" value="true" />
-    <param name="debug_file" value="$(find mission_control)/log/test.log" />
+    <param name="debug_file" value="$(find mission_control)/test.log" />
     <param name="node_dead_after" value="4" />
   </node>
 
-  <node name="node1" pkg="mission_control" type="behaviour_subprocess_node.py" output="screen">
+  <node name="node1" pkg="mission_control" type="behaviour_node.py" output="screen">
     <param name="priority" value="3" />
     <param name="active" value="int(self.get_var('counter6', 10)) &lt; 6 and int(self.get_var('counter3', 10)) != 0" />
     <param name="script" value="$(find mission_control)/examples/scripts/custom_script_priority3.py" />
   </node>
-  <node name="node2" pkg="mission_control" type="behaviour_subprocess_node.py" output="screen">
+  <node name="node2" pkg="mission_control" type="behaviour_node.py" output="screen">
     <param name="priority" value="6" />
     <param name="active" value="int(self.get_var('counter6', 10)) &lt;= 10 and int(self.get_var('counter6', 10)) != 0" />
     <param name="script" value="mission_control custom_script_priority6" />

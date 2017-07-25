@@ -59,12 +59,7 @@ class TestBehaviour(unittest.TestCase):
         success = self.beha.set_executable(file_path)
 
         self.assertTrue(success)
-
-    def test_set_executable_statemachine_not_found(self):
-        file_path = rospack.get_path('mission_control') + "/test/not_statemachine.py"
-        success = self.beha.set_executable(file_path)
-
-        self.assertFalse(success)
+        self.assertEquals(self.beha._script, file_path)
 
     def test_set_active(self):
         self.beha.set_active("False and True")

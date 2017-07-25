@@ -117,3 +117,7 @@ with sm:
                            transitions={'refresh':'MoveToRoomOne', 'move_to_room_two':'MoveToRoomTwo'})
     smach.StateMachine.add('MoveToRoomTwo', MoveToRoomTwo(), 
                            transitions={'refresh':'MoveToRoomTwo', 'move_to_room_one':'MoveToRoomOne'})
+
+if __name__ == '__main__':
+    mission_control_utils.ros_init("use_case_move_rooms")
+    sm.execute()

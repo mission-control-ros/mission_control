@@ -100,3 +100,7 @@ with sm:
                            transitions={'refresh':'MoveToRecharge', 'recharge':'Recharge'})
     smach.StateMachine.add('Recharge', Recharge(), 
                            transitions={'refresh':'Recharge', 'end':'end'})
+
+if __name__ == '__main__':
+    mission_control_utils.ros_init('use_case_recharge')
+    sm.execute()

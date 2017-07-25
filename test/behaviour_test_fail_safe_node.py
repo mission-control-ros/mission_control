@@ -19,7 +19,7 @@ def main():
     rospy.init_node('behaviour_fail_safe', anonymous=True)
     beha_fail_safe = behaviour_fail_safe.Behaviour_Fail_Safe()
     beha_fail_safe.set_debug_level(rospy.get_param('~debug', 0))
-    beha_fail_safe.set_executable(rospy.get_param('~state_machine'))
+    beha_fail_safe.set_executable(rospy.get_param('~script'))
 
     """
     We need to make a little pause after start-up so some of the token release/request 

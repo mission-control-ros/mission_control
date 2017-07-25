@@ -15,7 +15,7 @@ def main():
     beha.set_debug_level(rospy.get_param('~debug', 0))
     beha.set_priority(rospy.get_param('~priority'))
     beha.set_active(rospy.get_param('~active'))
-    beha.set_executable(rospy.get_param('~state_machine'))
+    beha.set_executable(rospy.get_param('~script'))
 
     """
     We need to make a little pause after start-up so some of the token release/request 
@@ -23,9 +23,12 @@ def main():
     """
     rospy.sleep(float(rospy.get_param('~wait_before_startup', 1)))
 
+    rospy.on_shutdown(beha.kill_process)
+
     fail_counter = 0
 
     rate = rospy.Rate(2)
+
     while not rospy.is_shutdown():
         if fail_counter < 10:
             beha.spin()
