@@ -16,6 +16,8 @@ def main():
     """
     rospy.sleep(float(rospy.get_param('~wait_before_startup', 1)))
 
+    rospy.on_shutdown(beha.kill_process)
+
     rate = rospy.Rate(2)
     while not rospy.is_shutdown():
         beha.spin()

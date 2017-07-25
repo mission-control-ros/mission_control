@@ -2,7 +2,8 @@ import rospy
 import smach
 import smach_ros
 import time
-#import imp
+import imp
+import uuid
 import subprocess
 import signal
 import os
@@ -34,6 +35,8 @@ class Behaviour:
 
     MAX_TOKEN_ASK_TIMES = 2
     """int: how many times node will ask for token on startup"""
+
+    MAX_VAR_SEARCH_RECURSION = 10
 
     _token_ask_times = 0
     """int: how many times node has asked for token on startup"""
@@ -78,6 +81,10 @@ class Behaviour:
 
     _var_last_upt = {}
     """dict: holds he info when the variable was last set"""
+
+    explored = []
+
+    types = []
 
     _debug_level = 0
     """int: node's debug level between 0..3 . 0 - lowest level, 3 - highest level"""
@@ -137,6 +144,8 @@ class Behaviour:
             file (string): file's name, that will be executed
         """
         self._script = file
+
+        return True
 
     def subscribe_to_topics(self):
         """ Subscribes to all ROS topics """
@@ -341,9 +350,110 @@ class Behaviour:
             data (std_msgs.msg.String): variable name that is being searched
         """
 
+
+        if os.path.isfile(self._script) and self.node_not_running():
+            found, var = self.find_var(data.data)
+
+            if found:
+                mission_control_utils.set_var(data.data, var)
+                return
+
         if data.data in self._cache:
             var = self._cache[data.data]
             mission_control_utils.set_var(data.data, var)
+
+    def find_var(self, var_name):
+
+        found = False
+        variable = None
+        self.explored = []
+        self.types = [smach.StateMachine]
+
+        state_machine = imp.load_source(str(uuid.uuid1()), self._script)
+
+        for var in  dir(state_machine):
+            obj = eval('state_machine.' + var)
+
+            if isinstance(obj, type) and obj not in self.types:
+                self.types.append(obj)
+
+        for var in  dir(state_machine):
+            obj = eval('state_machine.' + var)
+
+            if isinstance(obj, tuple(self.types)):
+                found, variable = self.explore_obj(obj, var_name)
+
+            if found:
+                return found, variable
+
+        return found, variable
+
+    def explore_obj(self, obj, var_name, cnt=0):
+
+        if obj in self.explored or cnt > self.MAX_VAR_SEARCH_RECURSION:
+            return False, None
+
+        found = False
+        found_var = None
+
+        self.explored.append(type(obj))
+
+        for var in dir(obj):
+            var_obj = eval('obj.' + var)
+            var_type = type(var_obj)
+
+            if var == var_name and var_type in (bool, str, int, long, float):
+                return True, var_obj
+
+            if var_type is dict:
+                found, found_var = self.explore_dict(var_obj, var_name, cnt+1)
+
+            if var_type in (list, tuple):
+                found, found_var = self.explore_list(var_obj, var_name, cnt+1)
+
+            if isinstance(var_obj, tuple(self.types)):
+                found, found_var = self.explore_obj(obj, var_name, cnt+1)
+
+            if found:
+                return found, found_var
+
+        return found, found_var
+
+    def explore_dict(self, dct, var_name, cnt):
+
+        found = False
+        found_var = None
+
+        if cnt > self.MAX_VAR_SEARCH_RECURSION:
+            return found, found_var
+
+        for key in dct:
+            obj = dct[key]
+            if isinstance(obj, tuple(self.types)):
+                found, found_var = self.explore_obj(obj, var_name, cnt+1)
+
+            if found:
+                return found, found_var
+
+        return found, found_var
+
+    def explore_list(self, lst, var_name, cnt):
+
+        found = False
+        found_var = None
+
+        if cnt > self.MAX_VAR_SEARCH_RECURSION:
+            return found, found_var
+
+        for i in range(0, len(lst)):
+            obj = lst[i]
+            if isinstance(obj, tuple(self.types)):
+                found, found_var = self.explore_obj(obj, var_name, cnt+1)
+
+            if found:
+                return found, found_var
+
+        return found, found_var
 
     def get_var(self, name, def_val=None, counter=0):
         """ Request given variable's value
@@ -362,6 +472,13 @@ class Behaviour:
         if name in self._cache:
             self.write_debug("Found variable named " + name + " in cache", 2)
             return self._cache[name]
+
+        if os.path.isfile(self._script) and self.node_not_running:
+            found, var = self.find_var(name)
+
+            if found:
+                self._cache[name] = var
+                return var
 
         if counter == 0:
             self._cache["_"+name] = True
@@ -435,6 +552,15 @@ class Behaviour:
 
         self.write_debug("Node deactivates", 1)
 
+    def node_not_running(self):
+
+        return not self._running and not self._process
+
+    def kill_process(self):
+
+        if self._process:
+            self._process.kill()
+
     def is_thread_alive(self):
         """ Checks if the subprocess, in which the script runs, is alive 
 
@@ -442,10 +568,13 @@ class Behaviour:
             bool: True if subprocess is alive, False otherwise
         """
 
+        if not self._process:
+            return False
+
         self._process.poll()
         alive = self._process.returncode == None
 
-        self.write_debug("Thread is " + str(alive), 3)
+        self.write_debug("Subprocess is " + str(alive), 3)
 
         return alive
 
@@ -475,6 +604,8 @@ class Behaviour:
         self.node_is_ok()
 
         allowed_to_ask_token = self.ask_token()
+
+        self.write_debug("mul on token: " + str(self._token), 3)
 
         if allowed_to_ask_token:
             self.write_debug("Node is not allowed to ask token", 2)
