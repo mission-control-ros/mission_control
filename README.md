@@ -39,7 +39,7 @@ To make your script's variables available for other scripts use function set_var
 
 #### ROS launch file's node example for python scripts
 ```
-  <node name="node1" pkg="mission_control" type="behaviour_subprocess_node.py" output="screen">
+  <node name="node1" pkg="mission_control" type="behaviour_node.py" output="screen">
     <param name="priority" value="3" />
     <param name="active" value="int(self.get_var('counter6', 10)) &lt;= 10 and int(self.get_var('counter6', 10)) != 0" />
     <param name="script" value="$(find mission_control)/examples/scripts/custom_script_priority6.py" />
@@ -50,7 +50,7 @@ To make your script's variables available for other scripts use function set_var
 
 #### ROS launch file's node example for C++ executables
 ```
-  <node name="node1" pkg="mission_control" type="behaviour_subprocess_node.py" output="screen">
+  <node name="node1" pkg="mission_control" type="behaviour_node.py" output="screen">
     <param name="priority" value="3" />
     <param name="active" value="int(self.get_var('counter6', 10)) &lt;= 10 and int(self.get_var('counter6', 10)) != 0" />
     <param name="script" value="mission_control custom_script_priority6" />
@@ -71,7 +71,22 @@ To make your script's variables available for other scripts use function set_var
 ## Creating SMACH StateMachine scripts
 
 In order for node to access SMACH StateMachine object, a variable which contains StateMachine object must be declared on a global level in the script. 
-The script containing that object is later passed to node, which retrieves it and executes the StateMachine.
+In the end of the file user has to check if the file is being ran or just imported. Inside that if clause user has to to ros_init and execute the statemachine. For example:
+```
+sm = smach.StateMachine(outcomes=['outcome4'])
+
+with sm:
+    smach.StateMachine.add('FOO', Foo(),
+                           transitions={'outcome1':'BAR', 'outcome2':'outcome4'})
+    smach.StateMachine.add('BAR', Bar(),
+                           transitions={'outcome1':'FOO'})
+
+if __name__ == '__main__':
+    mission_control_utils.ros_init("statemachine")
+    sm.execute()
+```
+
+This is necessary, because when the smach.Statemachine object is not being executed, the node imports the python script and tries to search for variables, that are asked from it.
 
 ### Variable management inside SMACH StateMachine object
 
@@ -84,7 +99,7 @@ To make your StateMachine's variables available for other Statemachines use func
   <node name="node1" pkg="mission_control" type="behaviour_node.py" output="screen">
     <param name="priority" value="6" />
     <param name="active" value="int(self.get_var('counter6')) &lt;= 10 and bool(self.get_var('fuel_tank')) and int(self.get_var('counter6')) != 0" />
-    <param name="state_machine" value="$(find mission_control)/examples/scripts/state_machine_priority6.py" />
+    <param name="script" value="$(find mission_control)/examples/scripts/state_machine_priority6.py" />
     <param name="wait_before_startup" value="2" />
     <param name="debug" value="1" />
   </node>
@@ -95,7 +110,7 @@ To make your StateMachine's variables available for other Statemachines use func
 * node type - script behaviour_node.py has to be used
 * priority - defines nodes priority. Smaller number shows higher priority. Values are in range 1..N
 * active - string which will be evaluated to boolean value. It shows under which conditions node is allowed to be active. To access variables that initialized in scripts use function self.get_var('your_variables_name'). Function's self.get_var first parameter is the variable's name that is being requested. Second optional parameter is default value that is returned if no variable with given name is found. When no default value is supplied None is returned when requested variable is not found.
-* state_machine - full path to script which holds the SMACH StateMachine that will be executed
+* script - full path to script which holds the SMACH StateMachine that will be executed
 * wait_before_startup (optional) - how many seconds node sleeps before execution in order to subscribe to all the topics. Default value is 1 second.
 * debug (optional) - Debug level which determines how many debug messages are displayed. This value ranges from 0 to 3. Zero turns debugging off. Default value is 0.
 
@@ -129,7 +144,7 @@ Starts after watchdog has detected that some node has unexpectedly died or won't
 #### ROS launch file's node example for SMACH StateMachines
 ```
   <node name="fail_safe" pkg="mission_control" type="behaviour_fail_safe_node.py" output="screen">
-    <param name="state_machine" value="$(find mission_control)/examples/scripts/state_machine_fail_safe.py" />
+    <param name="script" value="$(find mission_control)/examples/scripts/state_machine_fail_safe.py" />
     <param name="debug" value="1" />
   </node>
 ```
@@ -142,7 +157,7 @@ Starts after watchdog has detected that some node has unexpectedly died or won't
 
 #### ROS launch file's node example for custom scripts
 ```
-  <node name="fail_safe" pkg="mission_control" type="behaviour_subprocess_fail_safe_node.py" output="screen">
+  <node name="fail_safe" pkg="mission_control" type="behaviour_fail_safe_node.py" output="screen">
     <param name="script" value="$(find mission_control)/examples/scripts/custom_script_fail_safe.py" />
   </node>
 ```
