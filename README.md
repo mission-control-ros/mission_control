@@ -172,7 +172,7 @@ Starts after watchdog has detected that some node has unexpectedly died or won't
 
 To see how mission control works in simulation using Gazebo, follow these steps.
 
-Firstly be sure that you have installed ROS Desktop-Full isntallation that can be found here: http://wiki.ros.org/kinetic/Installation/Ubuntu
+Firstly be sure that you have installed ROS Desktop-Full installation that can be found here: http://wiki.ros.org/kinetic/Installation/Ubuntu
 
 Secondly install ros-kinetic-turtlebot-navigation and ros-kinetic-turtlebot-gazebo
 ```

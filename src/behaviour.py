@@ -634,6 +634,7 @@ class Behaviour:
         return not self._running and not self._process
 
     def kill_process(self):
+        """ Kills the active process """
 
         if self._process:
             self._process.kill()
