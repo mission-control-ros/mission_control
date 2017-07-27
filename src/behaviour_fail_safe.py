@@ -96,6 +96,6 @@ class Behaviour_Fail_Safe(behaviour.Behaviour):
 
         if active and self._token and not self._running:
             self.activate()
-        elif self._token and self._running and not self.is_thread_alive():
+        elif self._token and self._running and not self.is_subprocess_alive():
             self.deactivate()
             self._active = False

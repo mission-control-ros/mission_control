@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-import coverage_utils
-coverage_utils.cov_start()
-
 import rospkg
 import sys
 rospack = rospkg.RosPack()
@@ -36,7 +33,6 @@ def main():
         if beha._token:
             token_pub.publish(beha._priority)
 
-    coverage_utils.cov_stop()
 
 if __name__ == '__main__':
     try:

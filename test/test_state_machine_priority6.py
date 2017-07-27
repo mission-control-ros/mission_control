@@ -22,7 +22,7 @@ class Foo(smach.State):
         if self.test_counter6 != 0:
             self.test_counter6 -= 1
             rospy.loginfo("Countdown for state machine priority 6: %d", self.test_counter6)
-            mission_control_utils.set_var('test_counter6', self.test_counter6, 5)
+            mission_control_utils.set_var('test_counter6', self.test_counter6)
             time.sleep(1)
             return 'outcome1'
         else:

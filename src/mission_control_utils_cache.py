@@ -22,7 +22,7 @@ class Cache:
     """rospy.Publisher: publisher which sends out messages for getting variables"""
 
     set_sub = False
-    """rospy.Subscriber: subscriber which receives messages for getting variables"""
+    """rospy.Subscriber: subscriber which receives messages for setting variables"""
 
     debug_level = -1
     """int: node's debug level whom's script or object uses this cache"""

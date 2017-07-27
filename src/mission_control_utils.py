@@ -44,6 +44,9 @@ def set_var(name, value, ttl = None):
         msg.ttl = 0
     else:
         msg.ttl = int(ttl)
+
+    msg.node_name = Cache.parent_node_name
+
     Cache.set_pub.publish(msg)
 
     write_debug("Publishing variable named " + msg.name + " with value " + str(msg.value) + " with time to live " + str(msg.ttl), 3)
@@ -146,6 +149,11 @@ def write_debug(msg, level):
         rospy.loginfo(Cache.parent_node_name + " script/object - " + msg)
 
 
+def subscribe_to_topics():
+    """ Subscribe to all the topics needed in mission_control_utils """
+    Cache.set_pub = rospy.Publisher(Constants.VAR_SET_TOPIC, Variable, queue_size=Constants.QUEUE_SIZE)
+    Cache.get_pub = rospy.Publisher(Constants.VAR_GET_TOPIC, String, queue_size=Constants.QUEUE_SIZE)
+    Cache.set_sub = rospy.Subscriber(Constants.VAR_SET_TOPIC, Variable, set_var_cb)
 
 #This function is meant to use in custom scripts
 def ros_init(node_name):
@@ -155,19 +163,12 @@ def ros_init(node_name):
         node_name (string): name for the created node
     """
 
-    rospy.init_node(node_name, anonymous=True)
-
-    Cache.set_pub = rospy.Publisher(Constants.VAR_SET_TOPIC, Variable, queue_size=Constants.QUEUE_SIZE)
-    Cache.get_pub = rospy.Publisher(Constants.VAR_GET_TOPIC, String, queue_size=Constants.QUEUE_SIZE)
-
-    Cache.set_sub = rospy.Subscriber(Constants.VAR_SET_TOPIC, Variable, set_var_cb)
-
     if len(sys.argv) == 3:
         Cache.debug_level = int(sys.argv[1])
         Cache.parent_node_name = str(sys.argv[2])
 
+    rospy.init_node(node_name, anonymous=True)
+
+    subscribe_to_topics()
+
     write_debug("ROS init", 1)
-
-
-#This is meant for StateMachines
-Cache.set_sub = rospy.Subscriber(Constants.VAR_SET_TOPIC, Variable, set_var_cb)

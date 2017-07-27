@@ -32,6 +32,9 @@ class TestMissionControlUtilsSetVar(unittest.TestCase):
     def test_set_variable_counter6(self):
 
         rospy.Subscriber("/mission_control/test/mission_control_utils/start_asking", Bool, self.start_asking_callback)
+
+        mission_control_utils.subscribe_to_topics()
+
         timeout_t = time.time() + 60.0
         while not rospy.is_shutdown() and not self.start_asking and time.time() < timeout_t:
             time.sleep(0.1)

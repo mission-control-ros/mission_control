@@ -14,7 +14,7 @@ int main (int argc, char* argv[])
   {
 
     printf("In cpp file test_counter6 %d\n", i);
-    set_var(name, std::to_string(i), 5);
+    set_var(name, std::to_string(i));
     sleep(1);
 
     std::string var = get_var(name, def_val);

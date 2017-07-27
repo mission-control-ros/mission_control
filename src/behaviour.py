@@ -80,11 +80,16 @@ class Behaviour:
     """dict: holds variables time to live in seconds"""
 
     _var_last_upt = {}
-    """dict: holds he info when the variable was last set"""
+    """dict: holds the info when the variable was last set"""
+
+    _vars_from_own_proc = {}
+    """dict: holds all the variables that the child process set"""
 
     explored = []
+    """list: all the objects in child python script that have been searched for variables"""
 
     types = []
+    """list: all user defined class types that are in child python script"""
 
     _debug_level = 0
     """int: node's debug level between 0..3 . 0 - lowest level, 3 - highest level"""
@@ -330,7 +335,14 @@ class Behaviour:
             data (mission_control.msg.Variable): data.name is the variable's name, data.value is the variable's value, data.ttl is variable's validity
         """
 
-        if data.name in self._cache or ("_" + data.name) in self._cache:
+        var_from_own_proc = data.node_name == rospy.get_name()
+
+        if var_from_own_proc:
+            self._vars_from_own_proc[data.name] = data.value
+
+            self.write_debug("Setting variable named " + data.name + " with value " + str(data.value) + " as own variable", 2)
+
+        if data.name in self._cache or ("_" + data.name) in self._cache or var_from_own_proc:
             self._cache[data.name] = data.value
             self._var_last_upt[data.name] = rospy.Time.now()
 
@@ -343,13 +355,19 @@ class Behaviour:
     def get_variable_cb(self, data):
         """ Deals with get variable msg
 
-        Searches current node's cache for the variable
-        If variable is found, the sends out set variable msg
+        If child process isn't running then node tries to search for the variable
+        in child python script.
+
+        Otherwise looks, if the requested variable has been set by the child process.
+
+        If variable is found by either of these methods, then the variable is set
+        using mission_control_utils' function set_var
 
         Args:
             data (std_msgs.msg.String): variable name that is being searched
         """
 
+        self.check_var(data.data)
 
         if os.path.isfile(self._script) and self.node_not_running():
             found, var = self.find_var(data.data)
@@ -358,11 +376,25 @@ class Behaviour:
                 mission_control_utils.set_var(data.data, var)
                 return
 
-        if data.data in self._cache:
-            var = self._cache[data.data]
-            mission_control_utils.set_var(data.data, var)
+        elif data.data in self._vars_from_own_proc:
+            ttl = None
+
+            if data.data in self._var_ttl:
+                ttl = self._var_ttl[data.data].to_sec()
+
+            mission_control_utils.set_var(data.data, self._vars_from_own_proc[data.data], ttl)
 
     def find_var(self, var_name):
+        """ Tries to find the requested variable from child python file
+        that is stored in seld._script variable
+
+        Args:
+            var_name (string): variable name that is being searched
+
+        Returns:
+            bool: True if variable was found, False otherwise
+            mixed: None, if the variable wasn't found, otherwise variable's value
+        """
 
         found = False
         variable = None
@@ -392,6 +424,17 @@ class Behaviour:
         return found, variable
 
     def explore_obj(self, obj, var_name, cnt=0):
+        """ Explores all objects variables for the requested variable
+
+        Args:
+            obj (mixed): some user defined class or smach.Statemachine class
+            var_name (string): variable name that is being searched
+            cnt (int): how deep the reqursion is
+
+        Returns:
+            bool: True if variable was found, False otherwise
+            mixed: None, if the variable wasn't found, otherwise variable's value
+        """
 
         if obj in self.explored or cnt > self.MAX_VAR_SEARCH_RECURSION:
             return False, None
@@ -423,6 +466,17 @@ class Behaviour:
         return found, found_var
 
     def explore_dict(self, dct, var_name, cnt):
+        """ Searches dictionary for any objects that could be further explored
+
+        Args:
+            dct (dict): dictionary to be searched
+            var_name (string): variable name that is being searched
+            cnt (int): how deep the reqursion is
+
+        Returns:
+            bool: True if variable was found, False otherwise
+            mixed: None, if the variable wasn't found, otherwise variable's value
+        """
 
         found = False
         found_var = None
@@ -441,6 +495,17 @@ class Behaviour:
         return found, found_var
 
     def explore_list(self, lst, var_name, cnt):
+        """ Searches list for any objects that could be further explored
+
+        Args:
+            lst (lst): list to be searched
+            var_name (string): variable name that is being searched
+            cnt (int): how deep the reqursion is
+
+        Returns:
+            bool: True if variable was found, False otherwise
+            mixed: None, if the variable wasn't found, otherwise variable's value
+        """
 
         found = False
         found_var = None
@@ -462,7 +527,7 @@ class Behaviour:
         """ Request given variable's value
 
         First: checks cache, if variable exists there
-        Second: if variable is not in cache then searches variable from iteself's statemachine
+        Second: if variable is not in cache then searches for it in child python file if the process isn't running
         Third: lastly, if variable is not in node's statemachine, requests variable from all initialized nodes
 
         Args:
@@ -471,6 +536,9 @@ class Behaviour:
         Returns:
             mixed: requested variable's value
         """
+
+        if counter == 0:
+            self.check_var(name)
 
         if name in self._cache:
             self.write_debug("Found variable named " + name + " in cache", 2)
@@ -526,6 +594,10 @@ class Behaviour:
                 del self._cache["_" + name]
                 self.write_debug("Deleting variable named _" + name + " from self._cache", 3)
 
+            if name in self._vars_from_own_proc:
+                del self._vars_from_own_proc[name]
+                self.write_debug("Deleting variable named _" + name + " from self._vars_from_own_proc", 3)
+
             if name in self._var_ttl:
                 del self._var_ttl[name]
                 self.write_debug("Deleting time to live for variable named " + name + " from self._var_ttl", 3)
@@ -538,9 +610,11 @@ class Behaviour:
         """ Activates node """
 
         if(os.path.isfile(self._script)):
-            cmd = "exec python %s %d %s" % (self._script, self._debug_level, rospy.get_name())
+            cmd = "exec python %s %d %s"
         else:
-            cmd = "exec rosrun %s %d %s" % (self._script, self._debug_level, rospy.get_name())
+            cmd = "exec rosrun %s %d %s"
+
+        cmd = cmd % (self._script, self._debug_level, rospy.get_name())
 
         self._process = subprocess.Popen(cmd,shell=True)
         self._running = True
@@ -564,7 +638,7 @@ class Behaviour:
         if self._process:
             self._process.kill()
 
-    def is_thread_alive(self):
+    def is_subprocess_alive(self):
         """ Checks if the subprocess, in which the script runs, is alive 
 
         Returns:
@@ -621,7 +695,7 @@ class Behaviour:
 
         if active and self._token and not self._running:
             self.activate()
-        elif self._token and self._running and not self.is_thread_alive():
+        elif self._token and self._running and not self.is_subprocess_alive():
             self.deactivate()
 
     def write_debug(self, msg, level):

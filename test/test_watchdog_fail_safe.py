@@ -43,6 +43,8 @@ class TestWatchdogFailSafe(unittest.TestCase):
         rospy.Subscriber("/mission_control/test/fail_safe/test_counter6_foo", Int32, self.fail_safe_foo_callback)
         rospy.Subscriber("/mission_control/test/fail_safe/test_counter6_bar", Int32, self.fail_safe_bar_callback)
 
+        mission_control_utils.subscribe_to_topics()
+
         bar = None
         foo = None
 

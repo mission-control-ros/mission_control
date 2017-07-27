@@ -86,8 +86,8 @@ class TestBehaviour(unittest.TestCase):
 
         self.assertTrue(active)
 
-    def test_is_thread_alive(self):
-        alive = self.beha.is_thread_alive()
+    def test_is_subprocess_alive(self):
+        alive = self.beha.is_subprocess_alive()
 
         self.assertFalse(alive)
 

@@ -41,6 +41,7 @@ void set_var(std::string name, std::string value, int ttl)
   msg.name = name;
   msg.value = value;
   msg.ttl = ttl;
+  msg.node_name = node_parent_name;
   set_pub.publish(msg);
 
   write_debug("Publishing variable named " + name + " with value " + value + " with time to live " + std::to_string(ttl), 3);
