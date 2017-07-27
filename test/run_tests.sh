@@ -20,6 +20,7 @@ TESTS=(
 
 EXIT_CODE=0
 FAILED=0
+WHAT_FAILED=()
 
 for TEST in ${TESTS[@]}; do
 
@@ -31,6 +32,7 @@ for TEST in ${TESTS[@]}; do
   if [ $TEST_RESULT != 0 ]; then
     EXIT_CODE=1
     ((FAILED++))
+    WHAT_FAILED+=($TEST)
   fi
 
 done
@@ -40,5 +42,12 @@ rm -f $(rospack find mission_control)/test.log
 echo
 echo "Totally ${FAILED} tests failed!"
 echo
+
+if [ $FAILED != 0 ]; then
+  echo "Launch files that failed:"
+  for TEST in ${WHAT_FAILED[@]}; do
+    echo $TEST
+  done
+fi
 
 exit $EXIT_CODE
