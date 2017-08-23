@@ -429,7 +429,7 @@ class Behaviour:
         Args:
             obj (mixed): some user defined class or smach.Statemachine class
             var_name (string): variable name that is being searched
-            cnt (int): how deep the reqursion is
+            cnt (int): how deep the recursion is
 
         Returns:
             bool: True if variable was found, False otherwise
@@ -471,7 +471,7 @@ class Behaviour:
         Args:
             dct (dict): dictionary to be searched
             var_name (string): variable name that is being searched
-            cnt (int): how deep the reqursion is
+            cnt (int): how deep the recursion is
 
         Returns:
             bool: True if variable was found, False otherwise
@@ -500,7 +500,7 @@ class Behaviour:
         Args:
             lst (lst): list to be searched
             var_name (string): variable name that is being searched
-            cnt (int): how deep the reqursion is
+            cnt (int): how deep the recursion is
 
         Returns:
             bool: True if variable was found, False otherwise

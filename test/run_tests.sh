@@ -40,7 +40,7 @@ done
 rm -f $(rospack find mission_control)/test.log
 
 echo
-echo "Totally ${FAILED} tests failed!"
+echo "Totally ${FAILED} test(s) failed!"
 echo
 
 if [ $FAILED != 0 ]; then
