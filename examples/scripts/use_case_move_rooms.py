@@ -29,10 +29,17 @@ class MoveToRoomOne(smach.State):
 
 	rospy.on_shutdown(self.shutdown)
 	
-	self.move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
-	rospy.loginfo("Wait for the action server to come up")
+        self.move_base = None
 
-	self.move_base.wait_for_server(rospy.Duration(5))
+    def init_action_server(self):
+        if self.move_base != None:
+            return
+
+        self.move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+        rospy.loginfo("Wait for the action server to come up")
+
+        self.move_base.wait_for_server(rospy.Duration(5))
+
 
     def shutdown(self):
         if self.goal_sent:
@@ -42,6 +49,7 @@ class MoveToRoomOne(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo('Executing MoveToRoomOne')
+        self.init_action_server()
         if self.is_at_goal:
             self.goal_sent = False
             self.is_at_goal = False
@@ -75,10 +83,16 @@ class MoveToRoomTwo(smach.State):
 
 	rospy.on_shutdown(self.shutdown)
 	
-	self.move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
-	rospy.loginfo("Wait for the action server to come up")
+        self.move_base = None
 
-	self.move_base.wait_for_server(rospy.Duration(5))
+    def init_action_server(self):
+        if self.move_base != None:
+            return
+
+        self.move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+        rospy.loginfo("Wait for the action server to come up")
+
+        self.move_base.wait_for_server(rospy.Duration(5))
 
     def shutdown(self):
         if self.goal_sent:
@@ -88,6 +102,7 @@ class MoveToRoomTwo(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo('Executing MoveToRoomTwo')
+        self.init_action_server()
         if self.is_at_goal:
             self.goal_sent = False
             self.is_at_goal = False
