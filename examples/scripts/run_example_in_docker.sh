@@ -1,9 +1,10 @@
 #!/bin/bash
+source /catkin_ws/devel/setup.bash
 roscd mission_control/examples/scripts
 source set_env_variables.sh
 
 echo "Start xvfb..."
-Xvfb -shmem -screen 0 1280x1024x24
+Xvfb -shmem -screen 0 1280x1024x24 &
 sleep 2
 
 echo "Start gazebo server..."
