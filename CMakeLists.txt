@@ -40,6 +40,8 @@ add_library(
 
 target_link_libraries(mission_control_utils ${catkin_LIBRARIES})
 
+add_dependencies(mission_control_utils mission_control_generate_messages_cpp)
+
 add_executable(custom_script_priority6 examples/scripts/custom_script_priority6.cpp src/mission_control_utils.cpp)
 
 add_dependencies(custom_script_priority6 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
