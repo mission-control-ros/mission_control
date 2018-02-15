@@ -1,4 +1,6 @@
 #!/bin/bash
+
+roscd mission_control/examples/scripts
 ./start_move_base_in_docker.sh
 
 echo "Start use case..."
